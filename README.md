@@ -168,3 +168,16 @@ $$
 
 The formula calculates the percentage of 1s in the response, which gives an indication of how balanced the output is.
 
+## Citation
+If you are using this library, please cite it using the following citation:
+```
+@software{Koustav_Kumar_PUFAnalytics_Python_library_2024,
+author = {Koustav Kumar, Mondal},
+doi = {10.5281/zenodo.13284761},
+month = aug,
+title = {{PUFAnalytics: Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs)}},
+url = {https://github.com/TakMashhido/PUFAnalytics},
+version = {1.0.0},
+year = {2024}
+}
+```
