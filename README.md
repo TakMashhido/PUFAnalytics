@@ -20,9 +20,9 @@ This section covered detailed explanations and formulas for calculating various 
 
 **Formula**:
 
-\[
+
 \text{Hamming Distance}(\text{seq1}, \text{seq2}) = \sum_{i=1}^{n} \text{seq1}_i \neq \text{seq2}_i
-\]
+
 
 **Explanation**:
 - **seq1** and **seq2**: Two binary strings of equal length.
