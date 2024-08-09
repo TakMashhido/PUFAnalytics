@@ -4,7 +4,7 @@ authors:
 - family-names: "Koustav Kumar"
   given-names: "Mondal"
   orcid: "https://orcid.org/0000-0003-1679-1030"
-title: "Gas Sensor Measurement"
+title: "PUFAnalytics: Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs)"
 version: 1.0.0
 doi: 
 date-released: 2024-08-09
