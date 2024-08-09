@@ -21,6 +21,11 @@ cd PUFAnalytics
 pip install .
 ```
 
+## Basic Usage
+
+Once you have installed PUFAnalytics, you can start using it to analyze PUF data. For a quick overview and to see how to use the library, refer to the [example file](https://github.com/TakMashhido/PUFAnalytics/example.py). This file provides practical examples and demonstrates the usage of the library functions with sample data.
+
+
 ## PUFAnalytics Formulas
 
 This section covered detailed explanations and formulas for calculating various PUF metrics in the PUFAnalytics library. Each metric is important for assessing different aspects of Physically Unclonable Functions (PUFs) and their performance in hardware security applications.
