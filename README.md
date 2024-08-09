@@ -21,7 +21,7 @@ This section covered detailed explanations and formulas for calculating various 
 **Formula**:
 
 
-\text{Hamming Distance}(\text{seq1}, \text{seq2}) = \sum_{i=1}^{n} \text{seq1}_i \neq \text{seq2}_i
+$$\text{Hamming Distance}(\text{seq1}, \text{seq2}) = \sum_{i=1}^{n} \text{seq1}_i \neq \text{seq2}_i$$
 
 
 **Explanation**:
@@ -36,9 +36,7 @@ This section covered detailed explanations and formulas for calculating various 
 
 **Formula**:
 
-\[
-\text{Bit Error Rate} = \frac{\text{Number of Errors}}{\text{Total Number of Bits}}
-\]
+$$\text{Bit Error Rate} = \frac{\text{Number of Errors}}{\text{Total Number of Bits}}$$
 
 **Explanation**:
 - **Number of Errors**: The count of differing bits between the expected and actual sequences.
@@ -54,9 +52,8 @@ The formula calculates the proportion of bits that are incorrect, providing an i
 
 **Formula**:
 
-\[
-\text{Intra-PUF Variation} = \frac{\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \text{Hamming Distance}(\text{Response}_i, \text{Response}_j)}{\text{Number of comparisons}}
-\]
+
+$$\text{Intra-PUF Variation} = \frac{\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \text{Hamming Distance}(\text{Response}_i, \text{Response}_j)}{\text{Number of comparisons}}$$
 
 **Explanation**:
 - **Hamming Distance**: The number of differing bits between two binary strings.
@@ -73,9 +70,8 @@ The formula calculates the average Hamming Distance between all pairs of respons
 
 **Formula**:
 
-\[
-\text{Inter-PUF Variation} = \frac{\sum_{i=1}^{m-1} \sum_{j=i+1}^{m} \text{Hamming Distance}(\text{PUF}_i, \text{PUF}_j)}{\text{Number of comparisons}}
-\]
+
+$$\text{Inter-PUF Variation} = \frac{\sum_{i=1}^{m-1} \sum_{j=i+1}^{m} \text{Hamming Distance}(\text{PUF}_i, \text{PUF}_j)}{\text{Number of comparisons}}$$
 
 **Explanation**:
 - **PUF**: Different instances of PUFs being compared.
@@ -91,9 +87,9 @@ The formula computes the average Hamming Distance between all pairs of responses
 
 **Formula**:
 
-\[
+$$
 \text{Uniqueness} = \frac{2 \times \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} \text{Hamming Distance}(\text{PUF}_i, \text{PUF}_j)}{\text{Number of comparisons} \times \text{Response Length}}
-\]
+$$
 
 **Explanation**:
 - **Response Length**: Length of each response string in bits.
@@ -109,9 +105,9 @@ The formula calculates the average normalized Hamming Distance between all pairs
 
 **Formula**:
 
-\[
+$$
 \text{Reliability} = 1 - \frac{\sum_{i=1}^{n-1} \text{Hamming Distance}(\text{Reference Response}, \text{Response}_i)}{(n-1) \times \text{Response Length}}
-\]
+$$
 
 **Explanation**:
 - **Reference Response**: The initial response used as a baseline for comparison.
@@ -127,9 +123,9 @@ The formula calculates the average Hamming Distance between the reference respon
 
 **Formula**:
 
-\[
+$$
 \text{Avalanche Effect} = \frac{\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \text{Hamming Distance}(\text{Response}_i, \text{Response}_j)}{\text{Number of comparisons} \times \text{Response Length}}
-\]
+$$
 
 **Explanation**:
 - **Number of comparisons**: Total number of unique pairs of responses compared.
@@ -145,9 +141,9 @@ The formula calculates the average normalized Hamming Distance between all pairs
 
 **Formula**:
 
-\[
+$$
 \text{Uniformity} = \left(\frac{\text{Number of 1s in Response}}{\text{Response Length}}\right) \times 100
-\]
+$$
 
 **Explanation**:
 - **Number of 1s in Response**: Count of bits set to 1 in the response string.
