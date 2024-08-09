@@ -14,7 +14,41 @@
 
 This section covered detailed explanations and formulas for calculating various PUF metrics in the PUFAnalytics toolkit. Each metric is important for assessing different aspects of Physically Unclonable Functions (PUFs) and their performance in hardware security applications.
 
-### 1. Intra-PUF Variation
+### 1. Hamming Distance
+
+**Description**: Hamming Distance measures the number of differing bits between two binary strings of equal length. It is used to quantify the difference between two sequences and is a fundamental metric in error detection and correction.
+
+**Formula**:
+
+\[
+\text{Hamming Distance}(\text{seq1}, \text{seq2}) = \sum_{i=1}^{n} \text{seq1}_i \neq \text{seq2}_i
+\]
+
+**Explanation**:
+- **seq1** and **seq2**: Two binary strings of equal length.
+- The formula counts the number of positions where the bits in `seq1` and `seq2` differ.
+
+---
+
+### 2. Bit Error Rate
+
+**Description**: The Bit Error Rate (BER) measures the ratio of erroneous bits to the total number of bits in a sequence. It is used to evaluate the error performance in communication systems or storage devices, reflecting the percentage of bits that were incorrectly received or recorded compared to the total bits transmitted.
+
+**Formula**:
+
+\[
+\text{Bit Error Rate} = \frac{\text{Number of Errors}}{\text{Total Number of Bits}}
+\]
+
+**Explanation**:
+- **Number of Errors**: The count of differing bits between the expected and actual sequences.
+- **Total Number of Bits**: The length of the binary sequence.
+
+The formula calculates the proportion of bits that are incorrect, providing an indication of the quality or reliability of the communication or storage system.
+
+---
+
+### 3. Intra-PUF Variation
 
 **Description**: Intra-PUF Variation measures the variability in responses from the same PUF instance when subjected to different conditions. This metric helps in evaluating the stability of a PUF's response under changing environmental or operational factors.
 
@@ -33,7 +67,7 @@ The formula calculates the average Hamming Distance between all pairs of respons
 
 ---
 
-### 2. Inter-PUF Variation
+### 4. Inter-PUF Variation
 
 **Description**: Inter-PUF Variation assesses the difference in responses between different PUF instances. This metric is useful for understanding how distinct responses are across various PUFs, which indicates the uniqueness of each PUF instance.
 
@@ -51,7 +85,7 @@ The formula computes the average Hamming Distance between all pairs of responses
 
 ---
 
-### 3. Uniqueness
+### 5. Uniqueness
 
 **Description**: Uniqueness quantifies how different the responses are across various PUF instances. A higher uniqueness value indicates that responses are more distinct and less likely to be duplicated across different PUFs.
 
@@ -69,7 +103,7 @@ The formula calculates the average normalized Hamming Distance between all pairs
 
 ---
 
-### 4. Reliability
+### 6. Reliability
 
 **Description**: Reliability measures the consistency of a PUF's response under varied conditions. It indicates how stable a PUF's output is when the conditions (e.g., temperature, voltage) change.
 
@@ -87,7 +121,7 @@ The formula calculates the average Hamming Distance between the reference respon
 
 ---
 
-### 5. Avalanche Effect
+### 7. Avalanche Effect
 
 **Description**: Avalanche Effect measures how much a change in input affects the output of a PUF. A high avalanche effect implies that a small change in the input leads to a significant change in the output, which is desirable for security.
 
@@ -105,7 +139,7 @@ The formula calculates the average normalized Hamming Distance between all pairs
 
 ---
 
-### 6. Uniformity
+### 8. Uniformity
 
 **Description**: Uniformity measures the balance of 1s and 0s in a single PUF response. A uniform response has an approximately equal number of 1s and 0s, which is important for ensuring that the PUF output is unpredictable and evenly distributed.
 
