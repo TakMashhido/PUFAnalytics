@@ -1,4 +1,5 @@
-# PUFAnalytics
+# PUFAnalytics [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13284761.svg)](https://doi.org/10.5281/zenodo.13284761)
+
  PUFAnalytics is a Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs). This repository provides implementations for calculating critical PUF metrics including Intra-PUF Variation, Inter-PUF Variation, Uniqueness, Reliability, Avalanche Effect, and Uniformity. These metrics are essential for assessing the performance, security, and robustness of PUF instances under varying conditions. Whether you're conducting academic research or developing secure hardware, PUFAnalytics offers a reliable and scientifically accurate way to measure PUF characteristics.
 
 ## Key Features
