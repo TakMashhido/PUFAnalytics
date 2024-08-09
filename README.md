@@ -10,6 +10,17 @@
 - **Avalanche Effect**: Assesses the sensitivity of the PUF to changes in input challenges.
 - **Uniformity**: Measures the balance of 1s and 0s in a single PUF response.
 
+## Installation
+
+To install the PUFAnalytics library, follow these steps:
+
+
+```bash
+git clone https://github.com/TakMashhido/PUFAnalytics.git
+cd PUFAnalytics
+pip install .
+```
+
 ## PUFAnalytics Formulas
 
 This section covered detailed explanations and formulas for calculating various PUF metrics in the PUFAnalytics library. Each metric is important for assessing different aspects of Physically Unclonable Functions (PUFs) and their performance in hardware security applications.
