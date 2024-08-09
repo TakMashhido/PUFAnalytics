@@ -1,5 +1,5 @@
 # PUFAnalytics
- PUFAnalytics is a Python-based toolkit designed for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs). This repository provides implementations for calculating critical PUF metrics including Intra-PUF Variation, Inter-PUF Variation, Uniqueness, Reliability, Avalanche Effect, and Uniformity. These metrics are essential for assessing the performance, security, and robustness of PUF instances under varying conditions. Whether you're conducting academic research or developing secure hardware, PUFAnalytics offers a reliable and scientifically accurate way to measure PUF characteristics.
+ PUFAnalytics is a Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs). This repository provides implementations for calculating critical PUF metrics including Intra-PUF Variation, Inter-PUF Variation, Uniqueness, Reliability, Avalanche Effect, and Uniformity. These metrics are essential for assessing the performance, security, and robustness of PUF instances under varying conditions. Whether you're conducting academic research or developing secure hardware, PUFAnalytics offers a reliable and scientifically accurate way to measure PUF characteristics.
 
 ## Key Features
 
@@ -12,7 +12,7 @@
 
 ## PUFAnalytics Formulas
 
-This section covered detailed explanations and formulas for calculating various PUF metrics in the PUFAnalytics toolkit. Each metric is important for assessing different aspects of Physically Unclonable Functions (PUFs) and their performance in hardware security applications.
+This section covered detailed explanations and formulas for calculating various PUF metrics in the PUFAnalytics library. Each metric is important for assessing different aspects of Physically Unclonable Functions (PUFs) and their performance in hardware security applications.
 
 ### 1. Hamming Distance
 
