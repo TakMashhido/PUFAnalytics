@@ -6,6 +6,6 @@ authors:
   orcid: "https://orcid.org/0000-0003-1679-1030"
 title: "PUFAnalytics: Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs)"
 version: 1.0.0
-doi: 
+doi: 10.5281/zenodo.13284761
 date-released: 2024-08-09
 url: "https://github.com/TakMashhido/PUFAnalytics"
