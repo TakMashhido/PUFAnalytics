@@ -1,0 +1,11 @@
+cff-version: 1.0.0
+message: "If you use this library, please cite it as below."
+authors:
+- family-names: "Koustav Kumar"
+  given-names: "Mondal"
+  orcid: "https://orcid.org/0000-0003-1679-1030"
+title: "Gas Sensor Measurement"
+version: 1.0.0
+doi: 
+date-released: 2024-08-09
+url: "https://github.com/TakMashhido/PUFAnalytics"
