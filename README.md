@@ -175,6 +175,8 @@ $$
 
 The formula calculates the percentage of 1s in the response, which gives an indication of how balanced the output is.
 
+---
+
 ### 9. Bit Aliasing
 
 **Description**: Bit Aliasing measures the probability of each bit being '1' across all PUF responses. This metric helps in understanding the bias towards '1' in individual bit positions, which can indicate a lack of uniformity in the PUF responses.
