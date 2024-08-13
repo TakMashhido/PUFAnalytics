@@ -249,7 +249,7 @@ The formula calculates the mutual information between all pairs of bit positions
 **Formula**:
 
 $$
-\text{Min-Entropy} = -\log_2 \left(\max\left\{P(b) \text{ for } b \in \{0, 1\} \right\}\right)
+\text{Min-Entropy} = -\log_2 \left(\max\{P(b) \mid b \in \{0, 1\}\}\right)
 $$
 
 **Explanation**:
