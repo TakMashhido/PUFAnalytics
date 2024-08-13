@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pufanalytics',
-    version='1.0.0',
+    version='1.1.0',
     packages=find_packages(),
     description='A library for analyzing PUF metrics',
     author='Koustav Kumar Mondal',

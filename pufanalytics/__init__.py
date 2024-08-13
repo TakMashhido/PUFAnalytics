@@ -6,5 +6,10 @@ from .metrics import (
     uniqueness,
     reliability,
     avalanche_effect,
-    uniformity
+    uniformity,
+    bit_aliasing,
+    correlation_coefficient,
+    entropy,
+    mutual_information,
+    min_entropy
 )

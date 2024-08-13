@@ -1,3 +1,7 @@
+import math
+from collections import Counter
+from itertools import combinations
+
 def hamming_distance(seq1, seq2):
     """
     Compute the Hamming distance between two sequences of equal length.
@@ -154,3 +158,126 @@ def uniformity(response):
     n_bits = len(response)
     num_ones = response.count('1')
     return (num_ones / n_bits) * 100
+
+def bit_aliasing(response):
+    """
+    Compute the bit aliasing for a list of PUF responses.
+    
+    Parameters:
+    response (list of str): List of PUF responses.
+    
+    Returns:
+    list of float: The bit aliasing metric for each bit position.
+    """
+    n_responses = len(response)
+    n_bits = len(response[0])
+    
+    bit_aliasing_result = []
+    for i in range(n_bits):
+        bit_values = [response[i] for response in response]
+        num_ones = bit_values.count('1')
+        bit_aliasing_result.append(num_ones / n_responses)
+    
+    return bit_aliasing_result
+
+def correlation_coefficient(response):
+    """
+    Compute the correlation coefficient between PUF responses.
+    
+    Parameters:
+    response (list of str): List of PUF responses.
+    
+    Returns:
+    float: The correlation coefficient.
+    """
+    n = len(response)
+    if n < 2:
+        raise ValueError("At least two PUF responses are required")
+    
+    total_correlation = 0
+    count = 0
+    
+    for response1, response2 in combinations(response, 2):
+        total_correlation += sum(c1 == c2 for c1, c2 in zip(response1, response2))
+        count += 1
+    
+    n_bits = len(response[0])
+    return total_correlation / (count * n_bits)
+
+def entropy(puf_responses):
+    """
+    Compute the entropy of a list of PUF responses.
+    
+    Parameters:
+    puf_responses (list of str): List of PUF responses.
+    
+    Returns:
+    float: The entropy of the responses.
+    """
+    n_responses = len(puf_responses)
+    n_bits = len(puf_responses[0])
+    
+    total_entropy = 0
+    for i in range(n_bits):
+        bit_values = [response[i] for response in puf_responses]
+        count = Counter(bit_values)
+        probabilities = [count[bit] / n_responses for bit in count]
+        total_entropy += -sum(p * math.log2(p) for p in probabilities)
+    
+    return total_entropy / n_bits
+
+def mutual_information(puf_responses):
+    """
+    Compute the mutual information between PUF responses.
+    
+    Parameters:
+    puf_responses (list of str): List of PUF responses.
+    
+    Returns:
+    float: The mutual information metric.
+    """
+    n = len(puf_responses)
+    if n < 2:
+        raise ValueError("At least two PUF responses are required")
+    
+    n_bits = len(puf_responses[0])
+    total_mutual_info = 0
+    
+    for i in range(n_bits):
+        count1 = Counter([response[i] for response in puf_responses])
+        p1_prob = {bit: count1[bit] / n for bit in count1}
+
+        for j in range(i+1, n_bits):
+            count2 = Counter([response[j] for response in puf_responses])
+            p2_prob = {bit: count2[bit] / n for bit in count2}
+
+            joint_count = Counter((response[i], response[j]) for response in puf_responses)
+            joint_prob = {(bit1, bit2): joint_count[(bit1, bit2)] / n for bit1, bit2 in joint_count}
+            
+            for (bit1, bit2), joint_p in joint_prob.items():
+                if joint_p > 0:
+                    total_mutual_info += joint_p * math.log2(joint_p / (p1_prob[bit1] * p2_prob[bit2]))
+
+    return total_mutual_info / (n_bits * (n_bits - 1) / 2)
+
+def min_entropy(puf_responses):
+    """
+    Compute the min-entropy of a list of PUF responses.
+    
+    Parameters:
+    puf_responses (list of str): List of PUF responses.
+    
+    Returns:
+    float: The min-entropy of the responses.
+    """
+    n_responses = len(puf_responses)
+    n_bits = len(puf_responses[0])
+    
+    min_entropy_values = []
+    for i in range(n_bits):
+        bit_values = [response[i] for response in puf_responses]
+        count = Counter(bit_values)
+        max_probability = max(count.values()) / n_responses
+        min_entropy_values.append(-math.log2(max_probability))
+    
+    return sum(min_entropy_values) / n_bits

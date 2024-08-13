@@ -1,15 +1,22 @@
 # PUFAnalytics [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13284761.svg)](https://doi.org/10.5281/zenodo.13284761)
 
- PUFAnalytics is a Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs). This repository provides implementations for calculating critical PUF metrics including Intra-PUF Variation, Inter-PUF Variation, Uniqueness, Reliability, Avalanche Effect, and Uniformity. These metrics are essential for assessing the performance, security, and robustness of PUF instances under varying conditions. Whether you're conducting academic research or developing secure hardware, PUFAnalytics offers a reliable and scientifically accurate way to measure PUF characteristics.
+PUFAnalytics is a Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs). This repository provides implementations for calculating critical PUF metrics including Intra-PUF Variation, Inter-PUF Variation, Uniqueness, Reliability, Avalanche Effect, Uniformity, and additional advanced metrics for deeper analysis. These metrics are essential for assessing the performance, security, and robustness of PUF instances under varying conditions. Whether you're conducting academic research or developing secure hardware, PUFAnalytics offers a reliable and scientifically accurate way to measure PUF characteristics.
 
 ## Key Features
 
+- **Hamming Distance**: Hamming Distance measures the number of differing bits between two binary strings of equal length.
+- **Bit Error Rate**: The Bit Error Rate (BER) measures the ratio of erroneous bits to the total number of bits in a sequence.
 - **Intra-PUF Variation**: Measures the variation in the same PUF's response under different conditions.
 - **Inter-PUF Variation**: Measures the difference between different PUF instances' responses.
 - **Uniqueness**: Determines how distinct responses are across different PUF instances.
 - **Reliability**: Evaluates the consistency of a PUF's response under varied conditions.
 - **Avalanche Effect**: Assesses the sensitivity of the PUF to changes in input challenges.
 - **Uniformity**: Measures the balance of 1s and 0s in a single PUF response.
+- **Bit Aliasing**: Computes the probability of each bit being '1' across all PUF responses.
+- **Correlation Coefficient**: Measures the similarity between PUF responses.
+- **Entropy**: Measures the randomness or uncertainty in the PUF responses.
+- **Mutual Information**: Measures the amount of shared information between pairs of PUF responses.
+- **Min-Entropy**: Measures the unpredictability of the most likely outcome in the PUF responses.
 
 ## Installation
 
@@ -167,6 +174,85 @@ $$
 - **Response Length**: Total number of bits in the response string.
 
 The formula calculates the percentage of 1s in the response, which gives an indication of how balanced the output is.
+
+### 9. Bit Aliasing
+
+**Description**: Bit Aliasing measures the probability of each bit being '1' across all PUF responses. This metric helps in understanding the bias towards '1' in individual bit positions, which can indicate a lack of uniformity in the PUF responses.
+
+**Formula**:
+
+$$\text{Bit Aliasing}(i) = \frac{\text{Number of 1s at bit position } i}{\text{Total number of responses}}$$
+
+**Explanation**:
+- **Number of 1s at bit position i**: The count of responses where the bit at position `i` is '1'.
+- **Total number of responses**: The total number of PUF responses analyzed.
+
+The formula computes the probability that a specific bit position in the PUF response is '1' across all responses. This metric provides insights into how often a bit position is biased towards '1', indicating a potential issue in the randomness of the PUF.
+
+---
+
+### 10. Correlation Coefficient
+
+**Description**: The Correlation Coefficient measures the similarity between PUF responses. It indicates how strongly the bits of different PUF responses are correlated, which is crucial for understanding response patterns and potential dependencies between bits.
+
+**Formula**:
+
+$$\text{Correlation Coefficient} = \frac{\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} \sum_{k=1}^{L} \text{(Response1}_k = \text{Response2}_k)}{\text{Total number of comparisons} \times \text{Length of response}}$$
+
+**Explanation**:
+- **Response1_k** and **Response2_k**: Bits at position `k` in two different PUF responses being compared.
+- **Total number of comparisons**: Total number of unique pairs of PUF responses compared.
+- **Length of response**: The length of each PUF response in bits.
+
+The formula calculates the average number of matching bits between all pairs of PUF responses. A high correlation coefficient suggests that the PUF responses are similar, indicating potential predictability, which might reduce the security of the PUF.
+
+---
+
+### 11. Entropy
+
+**Description**: Entropy measures the randomness or uncertainty in the PUF responses. It quantifies the unpredictability of the PUF responses, with higher entropy values indicating more randomness and better security.
+
+**Formula**:
+
+$$\text{Entropy} = -\sum_{i=1}^{L} \sum_{b \in \{0,1\}} P(b) \log_2 P(b)$$
+
+**Explanation**:
+- **L**: The length of the PUF response in bits.
+- **P(b)**: The probability of bit `b` (either '0' or '1') occurring at each bit position across all responses.
+
+The formula computes the average entropy across all bit positions, reflecting the degree of randomness in the PUF responses. Higher entropy values suggest more randomness and therefore better security characteristics of the PUF.
+
+---
+
+### 12. Mutual Information
+
+**Description**: Mutual Information measures the amount of shared information between pairs of PUF responses. It quantifies the dependencies between different bit positions within the PUF responses, which is important for understanding potential correlations and vulnerabilities in the PUF.
+
+**Formula**:
+
+$$\text{Mutual Information} = \sum_{i=1}^{L-1} \sum_{j=i+1}^{L} \sum_{b_1, b_2 \in \{0,1\}} P(b_1, b_2) \log_2 \frac{P(b_1, b_2)}{P(b_1)P(b_2)}$$
+
+**Explanation**:
+- **P(b1, b2)**: The joint probability of bit `b1` occurring at position `i` and bit `b2` occurring at position `j` in the PUF responses.
+- **P(b1)** and **P(b2)**: The individual probabilities of bit `b1` at position `i` and bit `b2` at position `j`, respectively.
+
+The formula calculates the mutual information between all pairs of bit positions in the PUF responses, reflecting how much knowing the value of one bit reduces the uncertainty about the value of another bit. Higher mutual information suggests greater dependency between bits, which can reduce the effectiveness of the PUF.
+
+---
+
+### 13. Min-Entropy
+
+**Description**: Min-Entropy measures the unpredictability of the most likely outcome in the PUF responses. It provides a worst-case estimate of randomness, focusing on the most predictable bit positions in the PUF responses.
+
+**Formula**:
+
+$$\text{Min-Entropy} = -\log_2 \left(\max\left\{P(b) \text{ for } b \in \{0, 1\} \right\}\right)$$
+
+**Explanation**:
+- **P(b)**: The probability of the most frequent bit value (either '0' or '1') occurring at each bit position.
+
+The formula calculates the minimum entropy across all bit positions, representing the worst-case scenario in terms of predictability. Lower min-entropy values indicate that certain bit positions are more predictable, which can compromise the security provided by the PUF.
+
 
 ## Citation
 If you are using this library, please cite it using the following citation:

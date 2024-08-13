@@ -1,4 +1,4 @@
-from pufanalytics import intra_puf_variation, inter_puf_variation, uniqueness, reliability, avalanche_effect, uniformity, hamming_distance, bit_error_rate
+from pufanalytics import intra_puf_variation, inter_puf_variation, uniqueness, reliability, avalanche_effect, uniformity, hamming_distance, bit_error_rate, bit_aliasing, entropy, mutual_information, correlation_coefficient, min_entropy
 
 # Sample PUF responses for the same PUF under different conditions
 puf1_responses = [
@@ -45,3 +45,23 @@ print("Avalanche Effect:", avalanche)
 # Uniformity
 uni = uniformity(puf1_responses[0])
 print("Uniformity:", uni)
+
+#Bit Aliasing
+ba = bit_aliasing(puf1_responses)
+print("Bit Aliasing:", ba)
+
+#Correlation Coefficient
+cc = correlation_coefficient(puf_responses)
+print("Correlation Coefficient:", cc)
+
+#Entropy
+en = entropy(puf1_responses)
+print("Entropy:", en)
+
+#Mutual Information
+mi = mutual_information(puf_responses)
+print("Mutual Information:", mi)
+
+#Min-Entropy
+me = min_entropy(puf1_responses)
+print("Min-Entropy:", me)
