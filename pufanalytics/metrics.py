@@ -178,13 +178,13 @@ def bit_aliasing(responses):
     n_bits = len(responses[0])
 
     # Ensure all responses share the same length
-    for resp in responses:
-        if len(resp) != n_bits:
+    for r in responses:
+        if len(r) != n_bits:
             raise ValueError("All responses must have the same length")
 
     bit_aliasing_result = []
     for i in range(n_bits):
-        bit_values = [resp[i] for resp in responses]
+        bit_values = [r[i] for r in responses]
         num_ones = bit_values.count('1')
         bit_aliasing_result.append(num_ones / n_responses)
 
