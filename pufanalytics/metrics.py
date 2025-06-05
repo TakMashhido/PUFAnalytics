@@ -159,25 +159,35 @@ def uniformity(response):
     num_ones = response.count('1')
     return (num_ones / n_bits) * 100
 
-def bit_aliasing(response):
-    """
-    Compute the bit aliasing for a list of PUF responses.
-    
+def bit_aliasing(responses):
+    """Compute the bit aliasing for a list of PUF responses.
+
     Parameters:
-    response (list of str): List of PUF responses.
-    
+        responses (list of str): List of PUF responses where each response has
+            the same bit length.
+
     Returns:
-    list of float: The bit aliasing metric for each bit position.
+        list of float: The probability of bit ``i`` being ``1`` across all
+        responses for every bit position ``i``.
     """
-    n_responses = len(response)
-    n_bits = len(response[0])
-    
+
+    if not responses:
+        raise ValueError("At least one response is required")
+
+    n_responses = len(responses)
+    n_bits = len(responses[0])
+
+    # Ensure all responses share the same length
+    for resp in responses:
+        if len(resp) != n_bits:
+            raise ValueError("All responses must have the same length")
+
     bit_aliasing_result = []
     for i in range(n_bits):
-        bit_values = [response[i] for response in response]
+        bit_values = [resp[i] for resp in responses]
         num_ones = bit_values.count('1')
         bit_aliasing_result.append(num_ones / n_responses)
-    
+
     return bit_aliasing_result
 
 def correlation_coefficient(response):
