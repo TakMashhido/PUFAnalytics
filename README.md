@@ -1,4 +1,4 @@
-# PUFAnalytics [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13284761.svg)](https://doi.org/10.5281/zenodo.13284761)
+# PUFAnalytics
 
 PUFAnalytics is a Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs). This repository provides implementations for calculating critical PUF metrics including Intra-PUF Variation, Inter-PUF Variation, Uniqueness, Reliability, Avalanche Effect, Uniformity, and additional advanced metrics for deeper analysis. These metrics are essential for assessing the performance, security, and robustness of PUF instances under varying conditions. Whether you're conducting academic research or developing secure hardware, PUFAnalytics offers a reliable and scientifically accurate way to measure PUF characteristics.
 
@@ -257,13 +257,6 @@ $$
 
 The formula calculates the minimum entropy across all bit positions, representing the worst-case scenario in terms of predictability. Lower min-entropy values indicate that certain bit positions are more predictable, which can compromise the security provided by the PUF.
 
-
-## Citation
-If you are using this library, please cite it using the following citation:
-```
-@software{Koustav_Kumar_PUFAnalytics_Python_library_2024,
-author = {Koustav Kumar, Mondal},
-doi = {10.5281/zenodo.13284761},
 month = aug,
 title = {{PUFAnalytics: Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs)}},
 url = {https://github.com/TakMashhido/PUFAnalytics},
