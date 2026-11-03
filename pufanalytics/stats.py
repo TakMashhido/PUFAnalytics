@@ -242,6 +242,16 @@ def binomial_fit(hd_values, n_bits):
     return {"p": p, "chi2": chi2, "dof": dof, "p_value": pval}
 
 
+def _log_tails(n, p):
+    """log P(X <= t) and log P(X > t) for t = 0..n (vectorised, O(n))."""
+    lp = np.array([binom_logpmf(k, n, p) for k in range(n + 1)])
+    lo = np.logaddexp.accumulate(lp)
+    hi = np.empty(n + 1)
+    hi[:-1] = np.logaddexp.accumulate(lp[::-1])[::-1][1:]
+    hi[-1] = -np.inf
+    return lo, hi
+
+
 def binomial_far_frr(n_bits, p_intra, p_inter):
     """FAR / FRR under the independent-bit binomial model.
 
@@ -251,8 +261,12 @@ def binomial_far_frr(n_bits, p_intra, p_inter):
     estimated (e.g. 1e-9), as is standard in PUF key-generation literature.
     """
     t = np.arange(n_bits + 1)
-    far = np.array([binom_cdf(int(k), n_bits, p_inter) for k in t])
-    frr = np.array([binom_sf(int(k), n_bits, p_intra) for k in t])
+    a_lo, a_hi = _log_tails(n_bits, p_inter)
+    r_lo, r_hi = _log_tails(n_bits, p_intra)
+    with np.errstate(over="ignore", invalid="ignore"):
+        far = np.where(a_lo < a_hi, np.exp(a_lo), -np.expm1(a_hi))
+        frr = np.where(r_hi < r_lo, np.exp(r_hi), -np.expm1(r_lo))
+    far[-1], frr[-1] = 1.0, 0.0
     idx = int(np.argmin(np.maximum(far, frr)))
     return {
         "thresholds": t,

@@ -18,6 +18,9 @@ from . import stats as S
 
 __all__ = ["analyze", "to_json", "to_markdown", "to_latex", "IDEALS"]
 
+#: LZ76 complexity is quadratic; it is evaluated on (at most) this many leading bits.
+LZ_MAX_BITS = 16384
+
 #: Ideal value of every headline metric.
 IDEALS = {
     "uniformity": 50.0,
@@ -187,7 +190,8 @@ def analyze(data, reference="first", bootstrap=1000, seed=12345, alpha=0.05, nis
         "stream_shannon": _ent.shannon_entropy_rate(stream),
         "mcv_min_entropy": _ent.mcv_min_entropy(stream),
         "markov_min_entropy": _ent.markov_min_entropy(stream),
-        "lz_complexity": _ent.lz_complexity(stream) if stream.size <= 200000 else None,
+        "lz_complexity": _ent.lz_complexity(stream[:LZ_MAX_BITS]),
+        "lz_bits": int(min(stream.size, LZ_MAX_BITS)),
     }
     corr = Q.bit_correlation_matrix(ds, reference, max_bits=max_corr_bits)
     off = corr[~np.eye(corr.shape[0], dtype=bool)]
@@ -245,8 +249,9 @@ def _f(x, digits=3, pct=False):
         return "–"
     if pct:
         return ("%." + str(digits) + "f %%") % x
-    if isinstance(x, float) and x != 0 and (abs(x) < 1e-3 or abs(x) >= 1e5):
-        return "%.3e" % x
+    if isinstance(x, float) and x != 0 and (abs(x) < 1e-3 or abs(x) >= 1e6):
+        mant, exp = ("%.2e" % x).split("e")
+        return "%se%d" % (mant, int(exp))  # same style as the web app, e.g. 2.97e-9
     return ("%." + str(digits) + "f") % x
 
 

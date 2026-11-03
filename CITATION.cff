@@ -1,11 +1,30 @@
-cff-version: 1.0.0
-message: "If you use this library, please cite it as below."
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "PUFAnalytics: A Research-Grade Toolkit for the Evaluation of Physically Unclonable Functions"
+abstract: >-
+  PUFAnalytics is a Python library and in-browser workbench for evaluating
+  Physically Unclonable Functions (PUFs): standard quality metrics with
+  bootstrap confidence intervals, identification statistics (decidability,
+  EER, binomial FAR/FRR), NIST SP 800-22 randomness tests, NIST SP 800-90B
+  entropy estimates, reproducible PUF simulators, machine-learning modelling
+  attacks and fuzzy-extractor key-generation planning.
 authors:
-- family-names: "Koustav Kumar"
-  given-names: "Mondal"
-  orcid: "https://orcid.org/0000-0003-1679-1030"
-title: "PUFAnalytics: Python library for comprehensive evaluation and analysis of Physically Unclonable Functions (PUFs)"
-version: 1.0.0
+  - family-names: "Mondal"
+    given-names: "Koustav Kumar"
+    orcid: "https://orcid.org/0000-0003-1679-1030"
+version: 2.0.0
 doi: 10.5281/zenodo.13284761
-date-released: 2024-08-09
-url: "https://github.com/TakMashhido/PUFAnalytics"
+date-released: 2026-11-03
+url: "https://koustav.isroot.in/PUFAnalytics/"
+repository-code: "https://github.com/TakMashhido/PUFAnalytics"
+license: MIT
+keywords:
+  - physically unclonable function
+  - PUF
+  - hardware security
+  - uniqueness
+  - reliability
+  - NIST SP 800-22
+  - entropy
+  - fuzzy extractor

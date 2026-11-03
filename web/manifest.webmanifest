@@ -1,0 +1,11 @@
+{
+  "name": "PUFAnalytics",
+  "short_name": "PUFAnalytics",
+  "description": "Research-grade evaluation of Physically Unclonable Functions, entirely in the browser.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e8ebf5",
+  "theme_color": "#6c5ce7",
+  "icons": [{ "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
