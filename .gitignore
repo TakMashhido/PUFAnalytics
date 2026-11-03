@@ -2,3 +2,6 @@
 /build
 *.egg-info
 *.pyc
+.pytest_cache/
+node_modules/
+.DS_Store

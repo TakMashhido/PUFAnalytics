@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pufanalytics"
+version = "2.0.0"
+description = "Research-grade evaluation toolkit for Physically Unclonable Functions (PUFs)"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Koustav Kumar Mondal", email = "erkoustavkumar@gmail.com" }]
+requires-python = ">=3.8"
+dependencies = ["numpy>=1.20"]
+keywords = ["PUF", "physically unclonable function", "hardware security", "NIST SP 800-22", "uniqueness", "reliability"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "scipy>=1.7"]
+
+[project.urls]
+Homepage = "https://koustav.isroot.in/PUFAnalytics/"
+Source = "https://github.com/TakMashhido/PUFAnalytics"
+
+[project.scripts]
+pufanalytics = "pufanalytics.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pufanalytics*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

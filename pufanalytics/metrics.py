@@ -60,10 +60,10 @@ def inter_puf_variation(puf_responses):
     Compute the inter-PUF variation.
     
     Parameters:
-    puf_responses (list of list of str): List of lists, each containing PUF responses from different PUFs.
+    puf_responses (list of str): One response per PUF instance (same challenge).
     
     Returns:
-    float: The inter-PUF variation.
+    float: The mean pairwise inter-PUF Hamming distance (in bits).
     """
     m = len(puf_responses)
     if m < 2:
@@ -85,7 +85,9 @@ def uniqueness(puf_responses):
     puf_responses (list of str): List of PUF responses.
     
     Returns:
-    float: The uniqueness metric.
+    float: The uniqueness metric as a fraction (ideal 0.5).
+
+    Note: versions < 2.0 multiplied this value by an extra factor of two.
     """
     m = len(puf_responses)
     if m < 2:
@@ -98,7 +100,9 @@ def uniqueness(puf_responses):
             total_hd += hamming_distance(puf_responses[i], puf_responses[j])
             count += 1
     n = len(puf_responses[0])  # Assume all responses have the same length
-    return (2 * total_hd) / (count * n)
+    # Uniqueness = 2 / (k (k - 1)) * sum_{i<j} HD(R_i, R_j) / n, where
+    # k (k - 1) / 2 == count is the number of pairs (Maiti et al., 2013).
+    return total_hd / (count * n)
 
 def reliability(responses):
     """
@@ -130,7 +134,9 @@ def avalanche_effect(responses):
     responses (list of str): List of PUF responses.
     
     Returns:
-    float: The avalanche effect metric.
+    float: The mean pairwise fractional Hamming distance between the
+    responses (ideal 0.5 when the responses belong to challenges that differ
+    in a single bit).
     """
     n = len(responses)
     if n < 2:
@@ -198,7 +204,10 @@ def correlation_coefficient(response):
     response (list of str): List of PUF responses.
     
     Returns:
-    float: The correlation coefficient.
+    float: The mean fraction of agreeing bits over all response pairs
+    (1 - mean fractional Hamming distance).  For the Pearson / phi
+    correlation between bit positions see
+    :func:`pufanalytics.quality.bit_correlation_matrix`.
     """
     n = len(response)
     if n < 2:
