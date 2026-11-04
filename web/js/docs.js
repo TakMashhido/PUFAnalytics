@@ -98,10 +98,13 @@ export function renderDocs(root, refs) {
   root.innerHTML = `
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
     <section class="card"><h2>Methods &amp; documentation</h2><p class="muted">Definitions, assumptions and references for every number shown in the application.</p>
-      <div class="row">${SECTIONS.map(([id, t]) => `<a class="chip" href="#/docs" data-jump="${id}">${t}</a>`).join('')}</div></section>
+      <div class="row">${SECTIONS.map(([id, t]) => `<a class="chip" href="#/docs/${id}" data-jump="${id}">${t}</a>`).join('')}</div></section>
     ${SECTIONS.map(([id, t, body]) => `<section class="card prose-wrap" id="doc-${id}"><h2>${t}</h2><div class="prose">${id === 'refs' ? `<ol class="ref-list">${refs.map((r) => `<li>${r}</li>`).join('')}</ol><h3>BibTeX</h3><pre>${BIB}</pre>` : body}</div></section>`).join('')}
   </div>`;
-  $$('[data-jump]', root).forEach((a) => (a.onclick = (ev) => { ev.preventDefault(); document.getElementById(`doc-${a.dataset.jump}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  $$('[data-jump]', root).forEach((a) => (a.onclick = (ev) => { ev.preventDefault(); history.replaceState(null, '', `#/docs/${a.dataset.jump}`); document.getElementById(`doc-${a.dataset.jump}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  // Deep links: #/docs/<section> (e.g. #/docs/metrics) open the page at that section.
+  const target = (location.hash.match(/^#\/docs\/([\w-]+)/) || [])[1];
+  if (target && document.getElementById(`doc-${target}`)) requestAnimationFrame(() => document.getElementById(`doc-${target}`).scrollIntoView({ block: 'start' }));
   loadKatex().then((k) => {
     if (!k || !root.isConnected) return;
     $$('.formula', root).forEach((el) => { try { k.render(el.dataset.tex, el, { displayMode: true, throwOnError: false }); } catch { /* keep raw */ } });
@@ -109,5 +112,8 @@ export function renderDocs(root, refs) {
       if (!el.innerHTML.includes('\\(')) return;
       el.innerHTML = el.innerHTML.replace(/\\\((.+?)\\\)/g, (m, tex) => { try { return k.renderToString(tex.replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&'), { throwOnError: false }); } catch { return m; } });
     });
+    // Formulas change the layout; keep a deep-linked section in view.
+    const settle = () => { if (target && root.isConnected) document.getElementById(`doc-${target}`)?.scrollIntoView({ block: 'start' }); };
+    settle(); document.fonts?.ready.then(() => setTimeout(settle, 60));
   });
 }

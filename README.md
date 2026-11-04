@@ -8,6 +8,8 @@
 
 **▶ Web app: [koustav.isroot.in/PUFAnalytics](https://koustav.isroot.in/PUFAnalytics/)**. It runs entirely in your browser, works offline, and never uploads your data.
 
+**Guide:** [PUFAnalytics, a complete guide to evaluating PUFs in the browser and in Python](https://koustav.isroot.in/blog/pufanalytics-guide/) walks through every view of the app, how each metric is computed, and the full Python API.
+
 PUFAnalytics turns raw PUF read-outs into the numbers a hardware-security paper needs:
 
 - the standard quality metrics, with confidence intervals
