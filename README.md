@@ -197,15 +197,7 @@ If PUFAnalytics supports your research, please cite the paper (IEEE APCC 2025):
 
 ## References
 
-1. A. Maiti, V. Gunreddy, P. Schaumont, "A systematic method to evaluate and compare the performance of physical unclonable functions," *Embedded Systems Design with FPGAs*, Springer, 2013.
-2. R. Maes, *Physically Unclonable Functions: Constructions, Properties and Applications*, Springer, 2013.
-3. A. Rukhin et al., NIST SP 800-22 Rev. 1a, 2010.
-4. M. S. Turan et al., NIST SP 800-90B, 2018.
-5. U. Rührmair et al., "Modeling attacks on physical unclonable functions," ACM CCS, 2010.
-6. C. Bösch et al., "Efficient helper data key extractor on FPGAs," CHES, 2008.
-7. Y. Dodis, L. Reyzin, A. Smith, "Fuzzy extractors," EUROCRYPT, 2004.
-8. J. Daugman, "The importance of being random: statistical principles of iris recognition," *Pattern Recognition*, 2003.
-9. K. K. Mondal, A. Gupta, D. Das, "PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs," *2025 30th Asia-Pacific Conference on Communications (APCC)*, IEEE, 2025, pp. 1–6, doi: [10.23919/apcc64555.2025.11279762](https://doi.org/10.23919/apcc64555.2025.11279762).
+1. K. K. Mondal, A. Gupta, D. Das, "PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs," *2025 30th Asia-Pacific Conference on Communications (APCC)*, IEEE, 2025, pp. 1–6, doi: [10.23919/apcc64555.2025.11279762](https://doi.org/10.23919/apcc64555.2025.11279762).
 
 ## License
 
