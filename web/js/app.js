@@ -90,7 +90,7 @@ function renderChrome() {
 let lastRoute = null;
 function render() {
   const r = route(), [, title] = ROUTES.find((x) => x[0] === r);
-  document.title = `${title} · PUFAnalytics`;
+  document.title = r === 'overview' ? 'PUFAnalytics: online PUF evaluation workbench' : `${title} · PUFAnalytics`;
   $('#view-title').textContent = title;
   renderNav();
   const view = $('#view');
