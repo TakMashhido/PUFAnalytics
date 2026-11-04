@@ -54,10 +54,7 @@ cd web && python -m http.server 8000
 
 ### Deploying to `koustav.isroot.in/PUFAnalytics`
 
-The workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs the parity test and publishes `web/` with GitHub Actions.
-
-1. In the repository go to **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
-2. Push to `main` (or run the workflow manually).
+Deployment is automatic. On every push to `main` that touches `web/`, the workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) runs the parity test and publishes the app to the `gh-pages` branch, which GitHub Pages serves. You can also run it by hand from the **Actions** tab. If the site does not appear after the first deployment, open **Settings → Pages** and set the source to *Deploy from a branch* → `gh-pages` / root (a one-time step).
 
 If the custom domain `koustav.isroot.in` is configured on the user site `TakMashhido.github.io` (its own **Settings → Pages → Custom domain**, plus a DNS `CNAME` record pointing to `takmashhido.github.io`), GitHub serves every project site under that domain automatically. This app then appears at **`https://koustav.isroot.in/PUFAnalytics/`**, and no `CNAME` file is needed in this repository. All asset paths are relative, so the app also works at `https://takmashhido.github.io/PUFAnalytics/` or from any sub-path.
 

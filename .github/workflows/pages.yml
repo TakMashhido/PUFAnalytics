@@ -1,5 +1,8 @@
 name: Deploy web app to GitHub Pages
 
+# Publishes web/ to the gh-pages branch, which GitHub Pages serves.
+# Runs on every push to main that touches the app, and can be started manually.
+
 on:
   push:
     branches: [main, master]
@@ -7,40 +10,38 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - name: Parity test against stored reference values
         run: node web/tests/parity.test.mjs
+
       - name: Assemble site
         run: |
           mkdir -p _site
           cp -r web/index.html web/css web/js web/assets web/manifest.webmanifest web/sw.js web/404.html _site/
           touch _site/.nojekyll
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish to gh-pages
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd _site
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="Koustav Kumar Mondal" -c user.email="erkoustavkumar@gmail.com" \
+            commit -q -m "Deploy web app from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
