@@ -335,7 +335,7 @@ function metricsView(ctx, root) {
         ${row('Bit-aliasing', 'bit_aliasing', r.bit_aliasing.mean, '50%', '%', `Per-bit 1-probability across devices · σ = ${fmt(r.bit_aliasing.std)}%`)}
         ${r.uniqueness ? row('Uniqueness', 'uniqueness', r.uniqueness.mean, '50%', '%', `Mean inter-device fHD over ${r.uniqueness.pairs} pairs · σ = ${fmt(r.uniqueness.std)}%`) : ''}
         ${r.reliability ? row('Reliability', 'reliability', r.reliability.mean, '100%', '%', '100 − mean intra-device fHD') : ''}
-        ${r.steadiness ? row('Steadiness', 'reliability', r.steadiness.mean, '100%', '%', 'Maiti et al.: 1 + mean log₂ max(pₗ, 1−pₗ)', null) : ''}
+        ${r.steadiness ? row('Steadiness', 'reliability', r.steadiness.mean, '100%', '%', '1 + mean log₂ max(pₗ, 1−pₗ)', null) : ''}
         ${r.ber ? row('Mean bit error rate', 'ber', r.ber.mean, '0', '', `Worst device read: ${fmt(r.ber.max, 4)}`) : ''}
         ${r.stable_bits !== undefined ? `<tr><td><b>Stable-bit ratio</b><div class="small muted">Cells that never flipped</div></td><td class="num">${fmt(r.stable_bits * 100, 2)}%</td><td class="num">100%</td><td class="num">–</td><td>${statusBadge(r.stable_bits > 0.9 ? 'good' : r.stable_bits > 0.7 ? 'fair' : 'poor')}</td></tr>` : ''}
       </tbody></table></div>
@@ -460,7 +460,7 @@ function attackView(ctx, root) {
   root.innerHTML = `
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
     <section class="card" aria-labelledby="atk-t">
-      <div class="card-head"><div><h2 id="atk-t">Modelling-attack learning curves</h2><p class="card-sub">Logistic regression on the parity feature vector φ(c) of the additive delay model (Rührmair et al., CCS 2010). Each XOR value is a separate PUF instance.</p></div></div>
+      <div class="card-head"><div><h2 id="atk-t">Modelling-attack learning curves</h2><p class="card-sub">Logistic regression on the parity feature vector φ(c) of the additive delay model. Each XOR value is a separate PUF instance.</p></div></div>
       <form id="atk-form" class="stack">
         <div class="form-grid">
           <label class="field"><span>Stages k</span><input type="number" name="stages" min="4" max="256" value="${ui.stages}"></label>
@@ -609,7 +609,7 @@ function compareView(ctx, root) {
 function methodsParagraph(e, st) {
   const r = e.result, m = r.meta, md = e.ds.metadata || {};
   const src = md.simulator ? `a synthetic population generated with the ${{ arbiter: (md.params?.xor > 1 ? `${md.params.xor}-XOR ` : '') + `${md.params?.stages}-stage Arbiter PUF additive delay model`, ro: 'ring-oscillator PUF model', sram: 'SRAM power-up PUF model', ideal: 'ideal random PUF model' }[md.simulator]} (seed ${md.seed})` : 'measured responses';
-  return `We evaluated ${m.devices} PUF instances with ${m.bits}-bit responses (${m.measurements_total} read-outs in total${m.conditions.length > 1 ? ` across ${m.conditions.length} operating conditions: ${m.conditions.join(', ')}` : ''}) obtained from ${src}. Following Maiti et al. [1], we report uniformity, bit-aliasing, uniqueness (mean pairwise inter-device fractional Hamming distance) and reliability (100% minus the mean intra-device fractional Hamming distance to the ${st.reference === 'first' ? 'enrolment read-out' : 'majority-vote reference'}), with ${Math.round((1 - st.alpha) * 100)}% percentile-bootstrap confidence intervals over devices (B = ${st.bootstrap}, seed ${st.seed}). Identification performance is summarised by the decidability index d' [2], the empirical equal error rate and false-acceptance/false-rejection rates extrapolated with a binomial model [3]. Randomness of the concatenated enrolled responses was assessed with eight tests of NIST SP 800-22 [4] at α = ${st.nistAlpha}, and min-entropy with the Most-Common-Value and Markov estimators of NIST SP 800-90B [5]. All analyses were performed with PUFAnalytics v${VERSION} [6].`;
+  return `We evaluated ${m.devices} PUF instances with ${m.bits}-bit responses (${m.measurements_total} read-outs in total${m.conditions.length > 1 ? ` across ${m.conditions.length} operating conditions: ${m.conditions.join(', ')}` : ''}) obtained from ${src}. We report uniformity, bit-aliasing, uniqueness (mean pairwise inter-device fractional Hamming distance) and reliability (100% minus the mean intra-device fractional Hamming distance to the ${st.reference === 'first' ? 'enrolment read-out' : 'majority-vote reference'}), with ${Math.round((1 - st.alpha) * 100)}% percentile-bootstrap confidence intervals over devices (B = ${st.bootstrap}, seed ${st.seed}). Identification performance is summarised by the decidability index d', the empirical equal error rate and false-acceptance/false-rejection rates extrapolated with a binomial model. Randomness of the concatenated enrolled responses was assessed with eight tests of NIST SP 800-22 at α = ${st.nistAlpha}, and min-entropy with the Most-Common-Value and Markov estimators of NIST SP 800-90B. All analyses were performed with PUFAnalytics v${VERSION} [1].`;
 }
 function reportView(ctx, root) {
   const e = needData(ctx, root, 'report generation'); if (!e) return;
@@ -628,7 +628,7 @@ function reportView(ctx, root) {
       </div></section>
     <section class="card"><div class="card-head"><div><h3>Methods paragraph</h3><p class="card-sub">Auto-generated description of this evaluation for your paper — edit freely.</p></div><button class="btn small" id="copy-methods">${ICONS.copy} Copy</button></div>
       <p id="methods" class="inset" style="margin:0">${esc(methodsParagraph(e, st))}</p>
-      <ol class="ref-list small" style="margin-top:12px">${REFS.slice(0, 6).map((x) => `<li>${x}</li>`).join('')}</ol></section>
+      <ol class="ref-list small" style="margin-top:12px">${REFS.map((x) => `<li>${x}</li>`).join('')}</ol></section>
     <div class="grid grid-2">
       <section class="card"><div class="card-head"><h3>Report preview (Markdown)</h3></div><pre class="code" style="max-height:520px">${esc(md)}</pre></section>
       <section class="card"><div class="card-head"><h3>Python reproduction</h3></div><pre class="code" style="max-height:520px">${esc(toPython(e.ds, st, `${name}.csv`))}</pre></section>
@@ -638,22 +638,10 @@ function reportView(ctx, root) {
   $$('[data-dl]').forEach((b) => (b.onclick = () => { const [f, c, mime] = files[b.dataset.dl]; download(f, c(), mime); }));
   $('#bib').onclick = () => copyText(BIBTEX);
   $('#print').onclick = () => window.print();
-  $('#copy-methods').onclick = () => copyText($('#methods').textContent + '\n\n' + REFS.slice(0, 6).map((x, i) => `[${i + 1}] ${x.replace(/<[^>]+>/g, '')}`).join('\n'));
+  $('#copy-methods').onclick = () => copyText($('#methods').textContent + '\n\n' + REFS.map((x, i) => `[${i + 1}] ${x.replace(/<[^>]+>/g, '')}`).join('\n'));
 }
 export const REFS = [
-  'A. Maiti, V. Gunreddy, P. Schaumont, “A systematic method to evaluate and compare the performance of physical unclonable functions,” in <i>Embedded Systems Design with FPGAs</i>, Springer, 2013, pp. 245–267.',
-  'J. Daugman, “The importance of being random: statistical principles of iris recognition,” <i>Pattern Recognition</i>, 36(2):279–291, 2003.',
-  'R. Maes, <i>Physically Unclonable Functions: Constructions, Properties and Applications</i>, Springer, 2013.',
-  'A. Rukhin et al., “A statistical test suite for random and pseudorandom number generators for cryptographic applications,” NIST SP 800-22 Rev. 1a, 2010.',
-  'M. S. Turan et al., “Recommendation for the entropy sources used for random bit generation,” NIST SP 800-90B, 2018.',
   'K. K. Mondal, A. Gupta, D. Das, “PUFAnalytics: Python library for comprehensive evaluation and analysis of PUFs,” in <i>Proc. 2025 30th Asia-Pacific Conference on Communications (APCC)</i>, IEEE, Nov. 2025, pp. 1–6, doi:10.23919/apcc64555.2025.11279762.',
-  'U. Rührmair et al., “Modeling attacks on physical unclonable functions,” in <i>Proc. ACM CCS</i>, 2010, pp. 237–249.',
-  'C. Bösch et al., “Efficient helper data key extractor on FPGAs,” in <i>CHES</i>, LNCS 5154, 2008, pp. 181–197.',
-  'Y. Dodis, L. Reyzin, A. Smith, “Fuzzy extractors: how to generate strong keys from biometrics and other noisy data,” in <i>EUROCRYPT</i>, 2004.',
-  'G. E. Suh, S. Devadas, “Physical unclonable functions for device authentication and secret key generation,” in <i>Proc. DAC</i>, 2007.',
-  'D. Lim et al., “Extracting secret keys from integrated circuits,” <i>IEEE Trans. VLSI Systems</i>, 13(10):1200–1205, 2005.',
-  'A. Lempel, J. Ziv, “On the complexity of finite sequences,” <i>IEEE Trans. Information Theory</i>, 22(1):75–81, 1976.',
-  'B. Efron, R. Tibshirani, <i>An Introduction to the Bootstrap</i>, Chapman & Hall, 1993.',
 ];
 
 export const VIEWS = { overview, data: dataView, metrics: metricsView, identify: identifyView, randomness: randomnessView, attack: attackView, keys: keysView, compare: compareView, report: reportView, docs: (ctx, root) => renderDocs(root, REFS) };

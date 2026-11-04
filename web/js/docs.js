@@ -27,7 +27,7 @@ chipA,1,85C,0xA3F1C2997E4D0716
 chipB,0,25C,0x5C0E3D64819BF2E9</pre>
     <p>Also accepted: one response per line (one device each), <code>device,response</code> (repeated rows are re-measurements), NumPy <code>.npy</code> arrays of shape <code>(devices, bits)</code> or <code>(devices, measurements, bits)</code>, and the JSON written by <code>PUFDataset.to_dict()</code> in Python.</p>`],
   ['metrics', 'Quality metrics', `
-    <p>Let \\(k\\) devices have \\(n\\)-bit reference responses \\(R_i\\) and let \\(R_{i,t}\\) be the \\(t\\)-th of \\(T\\) re-measurements of device \\(i\\). \\(\\mathrm{HD}\\) is the Hamming distance and \\(\\mathrm{HW}\\) the Hamming weight. Definitions follow Maiti et al. [1].</p>
+    <p>Let \\(k\\) devices have \\(n\\)-bit reference responses \\(R_i\\) and let \\(R_{i,t}\\) be the \\(t\\)-th of \\(T\\) re-measurements of device \\(i\\). \\(\\mathrm{HD}\\) is the Hamming distance and \\(\\mathrm{HW}\\) the Hamming weight.</p>
     <div class="def-grid">
       <div><h3>Uniformity</h3>${F('U_i = \\frac{1}{n}\\,\\mathrm{HW}(R_i)\\times 100\\%')}<p class="small muted">Ideal 50%: balanced 0s and 1s within a response.</p></div>
       <div><h3>Bit-aliasing</h3>${F('B_l = \\frac{1}{k}\\sum_{i=1}^{k} r_{i,l}\\times 100\\%')}<p class="small muted">Ideal 50% for every bit position \\(l\\); systematic bias shows up as outliers.</p></div>
@@ -36,30 +36,30 @@ chipB,0,25C,0x5C0E3D64819BF2E9</pre>
       <div><h3>Steadiness</h3>${F('S_i = 100\\%\\,\\Big(1 + \\frac{1}{n}\\sum_{l}\\log_2\\max(p_{i,l},1-p_{i,l})\\Big)')}<p class="small muted">\\(p_{i,l}\\) is the empirical probability that bit \\(l\\) of device \\(i\\) reads 1.</p></div>
       <div><h3>Stable-bit ratio &amp; per-bit error rate</h3><p class="small">Fraction of (device, bit) cells that never flipped, and for every bit position the probability of differing from enrolment — the basis of dark-bit masking (available under Data → Pre-processing).</p></div>
     </div>
-    <h3>Confidence intervals</h3><p>For uniformity, bit-aliasing, uniqueness and reliability, devices are resampled with replacement (\\(B\\) times, default 1000) and the percentile interval is reported [13]. For uniqueness, pairs formed by a device with its own duplicate are excluded. Bootstrap indices come from the portable RNG, so intervals are identical in the browser and in Python for the same seed.</p>`],
+    <h3>Confidence intervals</h3><p>For uniformity, bit-aliasing, uniqueness and reliability, devices are resampled with replacement (\\(B\\) times, default 1000) and the percentile interval is reported. For uniqueness, pairs formed by a device with its own duplicate are excluded. Bootstrap indices come from the portable RNG, so intervals are identical in the browser and in Python for the same seed.</p>`],
   ['identification', 'Identification statistics', `
-    <p>Intra-device distances (noise) and inter-device distances (uniqueness) are compared as in biometrics [2, 3].</p>
+    <p>Intra-device distances (noise) and inter-device distances (uniqueness) are compared as in biometrics.</p>
     ${F("d' = \\frac{|\\mu_{\\text{inter}}-\\mu_{\\text{intra}}|}{\\sqrt{(\\sigma^2_{\\text{inter}}+\\sigma^2_{\\text{intra}})/2}}")}
     <p>With acceptance rule \\(\\mathrm{HD}\\le t\\): \\(\\mathrm{FRR}(t)=P(\\mathrm{HD}_{\\text{intra}}&gt;t)\\), \\(\\mathrm{FAR}(t)=P(\\mathrm{HD}_{\\text{inter}}\\le t)\\). Empirical curves cannot resolve rates below one over the number of comparisons, so the binomial model is also reported:</p>
     ${F('\\mathrm{FAR}(t)=\\sum_{i=0}^{t}\\binom{n}{i}p_{\\text{inter}}^{i}(1-p_{\\text{inter}})^{n-i},\\qquad \\mathrm{FRR}(t)=\\sum_{i=t+1}^{n}\\binom{n}{i}p_{\\text{intra}}^{i}(1-p_{\\text{intra}})^{n-i}')}
     <p>The threshold \\(t^*\\) minimises \\(\\max(\\mathrm{FAR},\\mathrm{FRR})\\). Tails are evaluated in log-space and stay accurate to below \\(10^{-300}\\). A chi-square goodness-of-fit p-value indicates how well the binomial model fits the observed distribution (bins with expected count ≥ 5).</p>`],
   ['randomness', 'Randomness tests & entropy', `
-    <p>The concatenated enrolled responses are tested with eight NIST SP 800-22 tests [4]: frequency (monobit), block frequency, runs, longest run of ones, cumulative sums (forward and backward), approximate entropy, serial (two p-values) and the discrete Fourier transform test (exact DFT for any length, via Bluestein's algorithm). Implementations reproduce the worked examples of the standard to six decimals. Tests whose minimum length is not met are flagged <i>not applicable</i>.</p>
+    <p>The concatenated enrolled responses are tested with eight NIST SP 800-22 tests: frequency (monobit), block frequency, runs, longest run of ones, cumulative sums (forward and backward), approximate entropy, serial (two p-values) and the discrete Fourier transform test (exact DFT for any length, via Bluestein's algorithm). Implementations reproduce the worked examples of the standard to six decimals. Tests whose minimum length is not met are flagged <i>not applicable</i>.</p>
     <ul><li><b>Population entropy</b> per bit position: \\(H_l = h(B_l)\\) and \\(H_{\\infty,l} = -\\log_2 \\max(B_l, 1-B_l)\\).</li>
-    <li><b>SP 800-90B MCV</b> [5]: \\(\\hat p\\) = most common value frequency, \\(p_u = \\min(1, \\hat p + 2.576\\sqrt{\\hat p(1-\\hat p)/(L-1)})\\), \\(H = -\\log_2 p_u\\).</li>
+    <li><b>SP 800-90B MCV</b>: \\(\\hat p\\) = most common value frequency, \\(p_u = \\min(1, \\hat p + 2.576\\sqrt{\\hat p(1-\\hat p)/(L-1)})\\), \\(H = -\\log_2 p_u\\).</li>
     <li><b>SP 800-90B Markov</b>: first-order transition probabilities; the min-entropy of the most likely 128-bit path (found by dynamic programming), divided by 128.</li>
-    <li><b>LZ76 complexity</b> [12], normalised as \\(c(n)\\log_2 n / n\\) (≈ 1 for random data).</li>
+    <li><b>LZ76 complexity</b>, normalised as \\(c(n)\\log_2 n / n\\) (≈ 1 for random data).</li>
     <li><b>Bit correlation</b>: Pearson φ between bit positions across devices; <b>autocorrelation</b> of the ±1-mapped responses with a 95% white-noise band \\(\\pm 1.96/\\sqrt{k(n-\\ell)}\\).</li></ul>`],
   ['simulators', 'Simulators', `
-    <ul><li><b>Arbiter / k-XOR Arbiter PUF</b> — additive delay model [11, 7]: \\(r = \\operatorname{sgn}(\\mathbf w^\\top \\boldsymbol\\phi(\\mathbf c) + \\sigma\\varepsilon)\\), \\(\\phi_i=\\prod_{j\\ge i}(1-2c_j)\\), weights \\(\\mathcal N(0,1)\\); XOR of several independent chains.</li>
-    <li><b>Ring-oscillator PUF</b> [10] — frequencies \\(f = \\sigma_p\\,\\mathcal N(0,1) + g\\cdot x\\) with a deterministic spatial gradient \\(g\\) shared by all chips (reproduces the bit-aliasing bias of neighbour pairing), compared pairwise under measurement noise.</li>
+    <ul><li><b>Arbiter / k-XOR Arbiter PUF</b> — additive delay model: \\(r = \\operatorname{sgn}(\\mathbf w^\\top \\boldsymbol\\phi(\\mathbf c) + \\sigma\\varepsilon)\\), \\(\\phi_i=\\prod_{j\\ge i}(1-2c_j)\\), weights \\(\\mathcal N(0,1)\\); XOR of several independent chains.</li>
+    <li><b>Ring-oscillator PUF</b> — frequencies \\(f = \\sigma_p\\,\\mathcal N(0,1) + g\\cdot x\\) with a deterministic spatial gradient \\(g\\) shared by all chips (reproduces the bit-aliasing bias of neighbour pairing), compared pairwise under measurement noise.</li>
     <li><b>SRAM PUF</b> — cell mismatch \\(\\mathcal N(\\beta, 1)\\) plus thermal noise at each power-up.</li>
     <li><b>Ideal PUF</b> — uniform random bits with independent flips (a reference for what perfect looks like at your sample size).</li></ul>
     <p>Operating conditions multiply the noise standard deviation. All random numbers come from <b>xoshiro128**</b> seeded with SplitMix32 and Box–Muller normals, drawn in a documented order that the Python package mirrors exactly: the same seed yields bit-identical populations in both environments (verified by an automated parity test with &gt;2,400 checks).</p>`],
   ['attack', 'Modelling attacks', `
-    <p>The additive delay model makes a single Arbiter PUF a linear threshold function of \\(\\boldsymbol\\phi(\\mathbf c)\\), so it can be learned from challenge–response pairs [7]. The Attack lab fits ridge-regularised logistic regression with Newton's method (\\(\\lambda = 10^{-2}\\)) on increasing training sets and reports held-out accuracy. XOR Arbiter PUFs are not linearly separable in \\(\\boldsymbol\\phi\\) and stay near 50% for this learner — this demonstrates resistance to <i>this attack only</i>, not security against stronger learners (multilayer perceptrons, CMA-ES, reliability-based attacks).</p>`],
+    <p>The additive delay model makes a single Arbiter PUF a linear threshold function of \\(\\boldsymbol\\phi(\\mathbf c)\\), so it can be learned from challenge–response pairs. The Attack lab fits ridge-regularised logistic regression with Newton's method (\\(\\lambda = 10^{-2}\\)) on increasing training sets and reports held-out accuracy. XOR Arbiter PUFs are not linearly separable in \\(\\boldsymbol\\phi\\) and stay near 50% for this learner — this demonstrates resistance to <i>this attack only</i>, not security against stronger learners (multilayer perceptrons, CMA-ES, reliability-based attacks).</p>`],
   ['ecc', 'Key generation (fuzzy extractors)', `
-    <p>A code-offset fuzzy extractor [9, 8] with an inner \\((r,1)\\) repetition code and an outer \\((n,k,t)\\) block code (BCH, Golay, Reed–Muller, Hamming) is sized for bit error rate \\(p\\) and min-entropy \\(h\\) per bit:</p>
+    <p>A code-offset fuzzy extractor with an inner \\((r,1)\\) repetition code and an outer \\((n,k,t)\\) block code (BCH, Golay, Reed–Muller, Hamming) is sized for bit error rate \\(p\\) and min-entropy \\(h\\) per bit:</p>
     ${F('p_{\\text{in}} = P[\\mathrm{Bin}(r,p) > \\lfloor r/2 \\rfloor],\\quad P_b = P[\\mathrm{Bin}(n,p_{\\text{in}})>t],\\quad P_{\\text{fail}} = 1-(1-P_b)^{B}')}
     <p>Helper data leaks \\(nr-k\\) bits per block, so the residual entropy per block is \\(nrh-(nr-k)\\); the number of blocks \\(B\\) is chosen so the total residual entropy covers the key length. Use the worst-case condition BER for a conservative design. The model assumes independent bit errors and does not account for decoder-specific or side-channel leakage.</p>`],
   ['index', 'Quality index (heuristic)', `
@@ -88,7 +88,7 @@ export function renderDocs(root, refs) {
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
     <section class="card"><h2>Methods &amp; documentation</h2><p class="muted">Definitions, assumptions and references for every number shown in the application.</p>
       <div class="row">${SECTIONS.map(([id, t]) => `<a class="chip" href="#/docs" data-jump="${id}">${t}</a>`).join('')}</div></section>
-    ${SECTIONS.map(([id, t, body]) => `<section class="card prose-wrap" id="doc-${id}"><h2>${t}</h2><div class="prose">${id === 'refs' ? `<ol class="ref-list">${refs.map((r) => `<li>${r}</li>`).join('')}</ol><h3>Cite PUFAnalytics</h3><pre>${BIB}</pre>` : body}</div></section>`).join('')}
+    ${SECTIONS.map(([id, t, body]) => `<section class="card prose-wrap" id="doc-${id}"><h2>${t}</h2><div class="prose">${id === 'refs' ? `<ol class="ref-list">${refs.map((r) => `<li>${r}</li>`).join('')}</ol><h3>BibTeX</h3><pre>${BIB}</pre>` : body}</div></section>`).join('')}
   </div>`;
   $$('[data-jump]', root).forEach((a) => (a.onclick = (ev) => { ev.preventDefault(); document.getElementById(`doc-${a.dataset.jump}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
   loadKatex().then((k) => {
