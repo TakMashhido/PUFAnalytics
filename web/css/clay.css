@@ -236,6 +236,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .chart { width: 100%; min-height: 120px; position: relative; }
 .chart svg { display: block; max-width: 100%; height: auto; border-radius: 12px; }
 .chart-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.chart3d-tools { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.chart3d-tools .btn { min-height: 30px; padding: 4px 10px; font-size: 0.8rem; }
 .chart-table { max-height: 320px; overflow: auto; margin-top: 12px; }
 .chart-tip {
   position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.12s;

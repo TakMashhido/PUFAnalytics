@@ -38,9 +38,11 @@ You also get publication-ready figures and tables, and a script that reproduces 
 | **Quality metrics** (Maiti et al.) | Uniformity, bit-aliasing, uniqueness, reliability, steadiness, mean/worst BER, per-bit error rate, stable-bit ratio, BER per operating condition, Hamming-weight distribution; 95% bootstrap CIs. |
 | **Identification** | Intra/inter fractional-HD distributions with binomial fits and χ² goodness of fit, decidability *d′*, empirical EER, binomial FAR/FRR with an optimal threshold *t\**, an interactive threshold explorer, DET curve, and the inter-device distance matrix. |
 | **Randomness & entropy** | NIST SP 800-22: monobit, block frequency, runs, longest run, cumulative sums, approximate entropy, serial, and DFT (exact for any length via Bluestein). NIST SP 800-90B MCV and Markov min-entropy; per-bit Shannon/min-entropy; LZ76 complexity; bit-position correlation matrix; autocorrelation with a white-noise band. |
-| **Simulators** | Arbiter and k-XOR Arbiter (additive delay model), ring-oscillator (process variation + systematic gradient, neighbour/disjoint pairing), SRAM (cell mismatch + bias), and an ideal PUF. Multi-condition noise scaling. |
-| **Attack lab** | Ridge-regularised logistic regression (Newton/IRLS) on parity features, learning curves across XOR widths, and attacks on your own CRPs. |
-| **Key generation** | A code-offset fuzzy-extractor planner: repetition ⊗ {BCH, Golay, Reed–Muller, Hamming}, key failure probability, helper-data leakage, residual entropy, and BER sensitivity. |
+| **Simulators** | Seven models: Arbiter and k-XOR Arbiter (additive delay model), Feed-forward Arbiter, (x, y)-Interpose, ring-oscillator (process variation + systematic gradient, neighbour/disjoint pairing), SRAM (cell mismatch + bias), DRAM retention (temperature-accelerated decay) and an ideal PUF. Multi-condition noise scaling. |
+| **Simulation studio** | Monte-Carlo sweeps of one or two parameters (population size, response length, noise, stages, XOR width, loops, …) with several seeds per point; curves with 95% bands and 3D response surfaces; `pa.sweep()` reproduces them in Python. |
+| **Figure studio** | 18 publication figures per dataset: violin and box plots, empirical CDFs, Q-Q vs binomial, ROC, identification error vs response length, temporal-majority-voting BER, bit-stability profile, polar bit-aliasing, entropy accumulation, bias-vs-instability and device scatter plots, and interactive 3D surfaces, bar charts and scatter plots. Download every figure as SVG + PNG + CSV in one zip. |
+| **Attack lab** | Ridge-regularised logistic regression (Newton/IRLS) on parity features; learning curves for Arbiter/XOR, Feed-forward and Interpose PUFs; a 3D learnability landscape (stages × CRPs); and attacks on your own CRPs. |
+| **Key generation** | A code-offset fuzzy-extractor planner: repetition ⊗ {BCH, Golay, Reed–Muller, Hamming}, key failure probability, helper-data leakage, residual entropy, BER sensitivity, a 3D key-failure landscape, and temporal-majority-voting analysis. |
 | **Reporting** | SVG/PNG/CSV for every chart; Markdown, LaTeX (booktabs) and JSON reports; an auto-written *methods* paragraph with references; a Python reproduction script; BibTeX; side-by-side comparison of datasets with radar charts. |
 
 ## Web application
@@ -90,6 +92,8 @@ quality.bit_flip_rate(ds)              # per-bit error rate → dark-bit masking
 quality.condition_ber(ds)              # BER per operating corner
 nist.run_all(ds.reference().ravel())   # SP 800-22 results
 estimators.markov_min_entropy(ds.reference().ravel())
+quality.tmv_ber(ds)                    # BER after temporal majority voting
+pa.sweep("sram", "noise", [0.05, 0.1, 0.2], param2="n_bits", values2=[64, 128], seeds=5)
 attacks.simulated_attack(stages=64, xor=2, train_sizes=(100, 1000, 10000))
 ecc.plan_key_generation(ber=0.08, min_entropy=0.9, key_bits=256, target_failure=1e-9)
 ```
@@ -97,6 +101,7 @@ ecc.plan_key_generation(ber=0.08, min_entropy=0.9, key_bits=256, target_failure=
 ### Command line
 
 ```bash
+pufanalytics simulate interpose -o ipuf.csv --devices 30 --bits 256 --param x=1 --param y=2
 pufanalytics simulate sram -o sram.csv --devices 50 --bits 256 --conditions 25C:1,85C:2.5 --param bias=0.1
 pufanalytics analyze sram.csv --markdown report.md --latex table.tex --json full.json
 pufanalytics nist sram.csv
@@ -161,7 +166,8 @@ pufanalytics/        Python package
   stats.py           special functions, binomial model, identification statistics, bootstrap
   nist.py            NIST SP 800-22 tests
   estimators.py      SP 800-90B and LZ76 estimators
-  simulators.py      PUF population simulators
+  simulators.py      PUF population simulators (7 models)
+  sweep.py           Monte-Carlo parameter sweeps
   attacks.py         modelling attacks
   ecc.py             fuzzy-extractor planner
   report.py          analyze() + Markdown / LaTeX / JSON
@@ -170,7 +176,7 @@ pufanalytics/        Python package
   metrics.py         original string-based API
 web/                 static web application (GitHub Pages)
   js/core/           analysis engine (mirrors the Python package)
-  js/                UI, SVG charts, reports
+  js/                UI, 2D/3D SVG charts, figure & simulation studios, reports
   tests/             cross-language parity test
 tests/               pytest suite
 ```

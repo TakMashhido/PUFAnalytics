@@ -1,7 +1,7 @@
 // Report generation (Markdown / LaTeX / JSON / Python reproduction / BibTeX) and quality scoring.
 import { fmt } from './ui.js';
 
-export const VERSION = '2.0.0';
+export const VERSION = '2.1.0';
 export const BIBTEX = `@inproceedings{mondal2025pufanalytics,
   title = {PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs},
   url = {http://dx.doi.org/10.23919/apcc64555.2025.11279762},

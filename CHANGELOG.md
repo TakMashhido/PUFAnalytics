@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.1.0 — 2026-11-04
+
+### Added
+- **Figure studio** (web): 18 publication figures per dataset, including violin and box plots, empirical CDFs, a Q-Q plot against the binomial model, ROC, identification error vs response length, temporal majority voting, a bit-stability profile, polar bit-aliasing, entropy accumulation and scatter plots with fits. It also has interactive 3D surface, bar and scatter charts (drag to rotate, export the current view). Every figure can be downloaded as SVG + PNG + CSV in a single zip.
+- **Simulation studio** (web) and `pa.sweep()`: Monte-Carlo sweeps of one or two parameters with confidence bands and 3D response surfaces.
+- New simulators: Feed-forward Arbiter PUF, (x, y)-Interpose PUF and DRAM retention PUF, bit-identical in Python and the browser.
+- Attack lab: attacks on Feed-forward and Interpose PUFs, and a 3D learnability landscape.
+- Key generation: a 3D key-failure landscape over BER × repetition.
+- `quality.tmv_ber()` and `stats.identification_vs_length()`.
+- Box, violin, strip, error-bar and polar charts in the chart engine; a dependency-free 3D SVG renderer; a zip writer.
+
 ## 2.0.0 — 2026-11-03
 
 ### Added

@@ -8,7 +8,7 @@ import { VIEWS } from './views.js';
 const DEFAULT_SETTINGS = { reference: 'first', bootstrap: 1000, alpha: 0.05, nistAlpha: 0.01, seed: 12345 };
 const ROUTES = [
   ['overview', 'Overview', 'home'], ['data', 'Data & simulation', 'data'], ['metrics', 'Quality metrics', 'metrics'],
-  ['identify', 'Identification', 'id'], ['randomness', 'Randomness & entropy', 'random'], ['attack', 'Attack lab', 'attack'],
+  ['identify', 'Identification', 'id'], ['randomness', 'Randomness & entropy', 'random'], ['figures', 'Figure studio', 'image'], ['sweep', 'Simulation studio', 'dice'], ['attack', 'Attack lab', 'attack'],
   ['keys', 'Key generation', 'key'], ['compare', 'Compare', 'compare'], ['report', 'Report & export', 'report'], ['docs', 'Methods & docs', 'docs'],
 ];
 
@@ -74,7 +74,7 @@ async function applySettings(s) {
 function route() { const r = (location.hash.match(/^#\/(\w+)/) || [])[1]; return ROUTES.some((x) => x[0] === r) ? r : 'overview'; }
 function renderNav() {
   const cur = route();
-  $('#nav').innerHTML = ROUTES.map(([k, label, ic], i) => `${i === 9 ? '<div class="nav-sep"></div>' : ''}<a href="#/${k}" ${k === cur ? 'aria-current="page"' : ''}>${ICONS[ic]}<span>${label}</span></a>`).join('');
+  $('#nav').innerHTML = ROUTES.map(([k, label, ic], i) => `${k === 'docs' ? '<div class="nav-sep"></div>' : ''}<a href="#/${k}" ${k === cur ? 'aria-current="page"' : ''}>${ICONS[ic]}<span>${label}</span></a>`).join('');
 }
 function renderChrome() {
   renderNav();

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pufanalytics"
-version = "2.0.0"
+version = "2.1.0"
 description = "Research-grade evaluation toolkit for Physically Unclonable Functions (PUFs)"
 readme = "README.md"
 license = { text = "MIT" }

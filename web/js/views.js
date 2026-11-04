@@ -3,12 +3,14 @@ import { $, $$, esc, ICONS, toast, download, copyText, fmt, slug, statusBadge } 
 import { plot, heatmap, radar, gauge, svgString, pngBlob, fmtNum } from './charts.js';
 import { parseText, fromDict, toCSV, toDict, makeDataset, measurement, reference, datasetSummary, subsetDevices } from './core/dataset.js';
 import { parseNpy } from './core/npy.js';
-import { planKeyGeneration, repetitionError, blockFailure } from './core/ecc.js';
+import { planKeyGeneration, repetitionError, blockFailure, CODES } from './core/ecc.js';
 import { toMarkdown, toLatex, toJSON, toPython, BIBTEX, scores, qualityIndex, status, VERSION } from './report.js';
 import { renderDocs } from './docs.js';
+import { surface3d } from './charts3d.js';
+import { figuresView, sweepView } from './views2.js';
 
 // ----------------------------------------------------------------- shared bits
-function chartCard(id, title, sub = '', cls = '', extra = '') {
+export function chartCard(id, title, sub = '', cls = '', extra = '') {
   return `<section class="card ${cls}" aria-labelledby="${id}-t">
     <div class="card-head"><div style="flex:1;min-width:180px"><h3 id="${id}-t">${title}</h3>${sub ? `<p class="card-sub">${sub}</p>` : ''}</div>
       <div class="chart-tools no-print">${extra}
@@ -19,7 +21,7 @@ function chartCard(id, title, sub = '', cls = '', extra = '') {
       </div></div>
     <div class="chart" id="${id}"></div><div class="chart-table" id="${id}-table" hidden></div></section>`;
 }
-function bindChartTools(root, ctx) {
+export function bindChartTools(root, ctx) {
   root.onclick = async (ev) => {
     const b = ev.target.closest('[data-act]'); if (!b || !b.dataset.chart) return;
     const c = $(`#${b.dataset.chart}`), name = `${slug(ctx.active()?.ds.name || 'chart')}-${b.dataset.chart}`;
@@ -33,7 +35,7 @@ function bindChartTools(root, ctx) {
     }
   };
 }
-const needData = (ctx, root, what = 'this analysis') => {
+export const needData = (ctx, root, what = 'this analysis') => {
   const e = ctx.active();
   if (!e) { root.innerHTML = `<div class="card empty">${ICONS.chip}<h2>No dataset yet</h2><p class="muted">Simulate a PUF population or import measurements to run ${what}.</p><div class="btn-group" style="justify-content:center"><a class="btn primary" href="#/data">${ICONS.data} Go to data</a><button class="btn" id="demo-btn">${ICONS.play} Load demo population</button></div></div>`; $('#demo-btn').onclick = () => loadDemo(ctx); return null; }
   if (!e.result) { root.innerHTML = '<div class="card empty"><h2>Analysing…</h2><p class="muted">Metrics are being computed in a background thread.</p></div>'; return null; }
@@ -44,7 +46,7 @@ export async function loadDemo(ctx, go = 'overview') {
   ds.name = 'Demo · 64-stage Arbiter PUF';
   await ctx.addDataset(ds, { go });
 }
-const idx = (n) => Array.from({ length: n }, (_, i) => i);
+export const idx = (n) => Array.from({ length: n }, (_, i) => i);
 const pct = (v) => fmt(v, 2);
 
 // ================================================================= OVERVIEW
@@ -70,9 +72,11 @@ function overview(ctx, root) {
         ['id', 'Identification analysis', "Intra/inter HD distributions, binomial fits, decidability d', empirical EER and extrapolated FAR/FRR.", 2],
         ['random', 'Randomness & entropy', 'Eight NIST SP 800-22 tests, SP 800-90B MCV and Markov min-entropy, LZ complexity and bit correlations.', 3],
         ['attack', 'Attack lab', 'Logistic-regression modelling attacks on (XOR) Arbiter PUFs with learning curves on simulated or your own CRPs.', 7],
+        ['image', 'Figure studio', 'Eighteen publication figures — violins, box plots, ECDF, Q-Q, ROC, polar and interactive 3D surfaces — exported as one zip.', 6],
+        ['dice', 'Simulation studio', 'Monte-Carlo parameter sweeps over seven PUF models with confidence bands and 3D response surfaces.', 8],
         ['key', 'Key-generation planner', 'Size repetition + BCH/Golay/Reed–Muller fuzzy extractors for a target key failure rate.', 4],
         ['report', 'Publication output', 'SVG/PNG figures, LaTeX tables, Markdown and JSON reports, plus a Python script that reproduces every number.', 5]]
-        .map(([ic, t, d, s]) => `<div class="feature"><div class="ico" style="color:var(--series-${s})">${ICONS[ic]}</div><h3>${t}</h3><p>${d}</p></div>`).join('')}
+        .map(([ic, t, d, s]) => `<div class="feature"><div class="ico" style="color:var(--series-${s === 8 ? 1 : s})">${ICONS[ic]}</div><h3>${t}</h3><p>${d}</p></div>`).join('')}
     </div>`;
     $('#demo-btn').onclick = async (ev) => { ev.target.disabled = true; await loadDemo(ctx); };
     return;
@@ -166,12 +170,16 @@ function bitmap(c, ds, mode = 'first', meas = 0) {
 }
 
 // ================================================================= DATA
-const MODEL_PARAMS = {
+export const MODEL_PARAMS = {
   arbiter: [['stages', 'Stages k', 64, 1, 'Delay stages per chain'], ['xor', 'XOR chains', 1, 1, '1 = plain Arbiter PUF'], ['noise', 'Noise σ', 0.05, 0.01, 'relative to delay σ = 1']],
   ro: [['sigma_process', 'Process σ', 1, 0.1, 'random frequency variation'], ['noise', 'Noise σ', 0.1, 0.01, 'per measurement'], ['gradient', 'Systematic gradient', 0, 0.5, 'deterministic across chips'], ['pairing', 'Pairing', 'neighbor', null, 'neighbor | disjoint']],
   sram: [['noise', 'Noise σ', 0.1, 0.01, 'relative to mismatch σ = 1'], ['bias', 'Cell bias', 0, 0.05, 'technology skew (0 = balanced)']],
   ideal: [['flip_prob', 'Flip probability', 0.02, 0.005, 'per bit per re-read']],
+  ff_arbiter: [['stages', 'Stages k', 64, 1, 'Delay stages'], ['loops', 'Feed-forward loops', 1, 1, 'evenly spaced, non-overlapping'], ['noise', 'Noise σ', 0.05, 0.01, 'relative to stage delay σ = 1']],
+  interpose: [['stages', 'Stages k', 64, 1, 'Upper chain stages'], ['x', 'Upper XOR x', 1, 1, 'chains in the upper layer'], ['y', 'Lower XOR y', 1, 1, 'chains in the lower layer'], ['noise', 'Noise σ', 0.05, 0.01, 'relative to delay σ = 1']],
+  dram: [['noise', 'Noise σ', 0.1, 0.01, 'read-out noise'], ['threshold', 'Decay threshold', 0, 0.05, 'in σ units (0 → 50% decay)'], ['temp_shift', 'Temperature shift', 0.3, 0.05, 'threshold shift per ln(scale)']],
 };
+export const MODEL_NAMES = { arbiter: 'Arbiter / XOR', ff_arbiter: 'Feed-forward', interpose: 'Interpose', ro: 'Ring oscillator', sram: 'SRAM', dram: 'DRAM', ideal: 'Ideal' };
 const COND_PRESETS = { nominal: [['nominal', 1]], temp: [['25C', 1], ['-40C', 1.8], ['85C', 2.6]], volt: [['1.20V', 1], ['1.08V', 1.6], ['1.32V', 1.5]], corners: [['25C/1.20V', 1], ['-40C/1.08V', 2.2], ['85C/1.08V', 2.8], ['85C/1.32V', 2.4]] };
 
 function dataView(ctx, root) {
@@ -182,7 +190,7 @@ function dataView(ctx, root) {
     <section class="card" aria-labelledby="sim-t">
       <div class="card-head"><div><h2 id="sim-t">Simulate a PUF population</h2><p class="card-sub">Seeded and reproducible: the Python package regenerates identical bits.</p></div></div>
       <form id="sim-form" class="stack">
-        <div class="seg" role="group" aria-label="PUF model">${[['arbiter', 'Arbiter / XOR'], ['ro', 'Ring oscillator'], ['sram', 'SRAM'], ['ideal', 'Ideal']].map(([k, l]) => `<button type="button" data-model="${k}" aria-pressed="${ui.model === k}">${l}</button>`).join('')}</div>
+        <div class="seg" role="group" aria-label="PUF model">${Object.entries(MODEL_NAMES).map(([k, l]) => `<button type="button" data-model="${k}" aria-pressed="${ui.model === k}">${l}</button>`).join('')}</div>
         <div class="form-grid">
           <label class="field"><span>Devices</span><input type="number" name="n_devices" min="2" max="2000" value="32" required></label>
           <label class="field"><span>Response bits</span><input type="number" name="n_bits" min="8" max="16384" value="128" required></label>
@@ -250,7 +258,7 @@ function dataView(ctx, root) {
     ev.preventDefault(); syncConds();
     const f = new FormData(ev.target), params = {};
     for (const [k, , , step] of MODEL_PARAMS[ui.model]) { const v = f.get(`p_${k}`); params[k] = step === null ? v : Number(v); }
-    if (ui.model === 'arbiter') { params.stages = Math.max(1, params.stages | 0); params.xor = Math.max(1, params.xor | 0); }
+    for (const k of ['stages', 'xor', 'loops', 'x', 'y']) if (k in params) params[k] = Math.max(k === 'loops' ? 0 : 1, params[k] | 0);
     const spec = { model: ui.model, n_devices: +f.get('n_devices'), n_bits: +f.get('n_bits'), n_repeats: +f.get('n_repeats'), seed: +f.get('seed'), conditions: ui.conds.map(([l, s]) => [String(l).trim() || 'cond', Number(s)]), params };
     if (spec.n_devices * spec.n_bits * spec.n_repeats * spec.conditions.length > 4e7) return toast('That population is very large; please reduce devices × bits × measurements.', 'error');
     const btn = ev.submitter; if (btn) btn.disabled = true;
@@ -455,26 +463,29 @@ function randomnessView(ctx, root) {
 
 // ================================================================= ATTACK LAB
 function attackView(ctx, root) {
-  const ui = ctx.state.ui.atk || (ctx.state.ui.atk = { stages: 64, xors: '1,2,3,4', noise: 0.05, sizes: '50,100,200,500,1000,2000,5000,10000', test: 2000, seed: 7, res: null, crp: null });
+  const ui = ctx.state.ui.atk || (ctx.state.ui.atk = { model: 'arbiter', stages: 64, xors: '1,2,3,4', noise: 0.05, sizes: '50,100,200,500,1000,2000,5000,10000', test: 2000, seed: 7, res: null, crp: null, land: null });
+  const VAR = { arbiter: ['XOR values', 'XOR', 'comma separated, e.g. 1,2,4'], ff_arbiter: ['Feed-forward loop counts', 'loops', 'e.g. 0,1,2,3 (0 = plain arbiter)'], interpose: ['Lower-layer XOR y (x = 1)', 'y', 'e.g. 1,2,3'] }[ui.model];
   const e = ctx.active(), canCrp = e && e.ds.challenges;
   root.innerHTML = `
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
     <section class="card" aria-labelledby="atk-t">
       <div class="card-head"><div><h2 id="atk-t">Modelling-attack learning curves</h2><p class="card-sub">Logistic regression on the parity feature vector φ(c) of the additive delay model. Each XOR value is a separate PUF instance.</p></div></div>
       <form id="atk-form" class="stack">
+        <div class="seg" role="group" aria-label="Attacked PUF">${[['arbiter', 'Arbiter / XOR'], ['ff_arbiter', 'Feed-forward'], ['interpose', 'Interpose (1,y)']].map(([k, l]) => `<button type="button" data-amodel="${k}" aria-pressed="${ui.model === k}">${l}</button>`).join('')}</div>
         <div class="form-grid">
           <label class="field"><span>Stages k</span><input type="number" name="stages" min="4" max="256" value="${ui.stages}"></label>
-          <label class="field"><span>XOR values</span><input type="text" name="xors" value="${esc(ui.xors)}"><small>comma separated, e.g. 1,2,4</small></label>
+          <label class="field"><span>${VAR[0]}</span><input type="text" name="xors" value="${esc(ui.xors)}"><small>${VAR[2]}</small></label>
           <label class="field"><span>Noise σ</span><input type="number" name="noise" step="0.01" min="0" value="${ui.noise}"></label>
           <label class="field"><span>Training CRPs</span><input type="text" name="sizes" value="${esc(ui.sizes)}"></label>
           <label class="field"><span>Test CRPs</span><input type="number" name="test" min="100" value="${ui.test}"></label>
           <label class="field"><span>Seed</span><input type="number" name="seed" value="${ui.seed}"></label>
         </div>
-        <div class="row"><button class="btn primary" type="submit">${ICONS.play} Run attack</button><span class="small muted">Runs in a background thread; large k × CRP counts may take a few seconds.</span></div>
+        <div class="row"><button class="btn primary" type="submit">${ICONS.play} Run attack</button><button class="btn" type="button" id="atk-land">${ICONS.metrics} 3D learnability landscape</button><span class="small muted">Runs in a background thread; large k × CRP counts may take a few seconds.</span></div>
       </form>
     </section>
+    ${ui.land ? `<section class="card"><div class="card-head"><div style="flex:1;min-width:180px"><h3>Learnability landscape · ${esc(ui.land.title)}</h3><p class="card-sub">Test accuracy over stages × training CRPs (drag to rotate)</p></div><div class="chart-tools no-print"><button class="btn small ghost" data-act="csv" data-chart="atk-land3d">CSV</button><button class="btn small ghost" data-act="svg" data-chart="atk-land3d">SVG</button><button class="btn small ghost" data-act="png" data-chart="atk-land3d">PNG</button></div></div><div class="chart" id="atk-land3d"></div></section>` : ''}
     ${chartCard('atk-curve', 'Prediction accuracy vs training set size', 'Held-out test accuracy; 50% = random guessing')}
-    ${ui.res ? `<section class="card"><h3>Results</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>PUF</th>${ui.res[0].train_sizes.map((n) => `<th class="num">${n}</th>`).join('')}</tr></thead><tbody>${ui.res.map((r) => `<tr><td><b>${r.xor}-XOR, k=${r.stages}</b></td>${r.test_accuracy.map((a) => `<td class="num">${fmt(a * 100, 1)}%</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>` : ''}
+    ${ui.res ? `<section class="card"><h3>Results</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>PUF</th>${ui.res[0].train_sizes.map((n) => `<th class="num">${n}</th>`).join('')}</tr></thead><tbody>${ui.res.map((r) => `<tr><td><b>${esc(r.label || `${r.xor}-XOR`)}, k=${r.stages}</b></td>${r.test_accuracy.map((a) => `<td class="num">${fmt(a * 100, 1)}%</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>` : ''}
     <section class="card" aria-labelledby="crp-t">
       <div class="card-head"><div><h2 id="crp-t">Attack your own CRPs</h2><p class="card-sub">Paste <code>challenge,response</code> lines (binary challenge of k bits, response 0/1) or use the active simulated Arbiter dataset.</p></div></div>
       <div class="stack">
@@ -491,19 +502,30 @@ function attackView(ctx, root) {
   bindChartTools(root, ctx);
   const drawCurve = () => {
     if (!ui.res) { $('#atk-curve').innerHTML = '<p class="muted">Run an attack to see learning curves.</p>'; return; }
-    plot($('#atk-curve'), { height: 300, x: { label: 'Training CRPs', type: 'log', format: (v) => (v >= 1000 ? `${v / 1000}k` : v) }, y: { label: 'Test accuracy (%)', domain: [40, 100] }, layers: [...ui.res.slice(0, 8).map((r, i) => ({ type: 'line', x: r.train_sizes, y: r.test_accuracy.map((a) => a * 100), name: `${r.xor}-XOR`, slot: i, markers: true })), { type: 'hline', y: 50, label: 'random guess' }] });
+    plot($('#atk-curve'), { height: 300, x: { label: 'Training CRPs', type: 'log', format: (v) => (v >= 1000 ? `${v / 1000}k` : v) }, y: { label: 'Test accuracy (%)', domain: [40, 100] }, layers: [...ui.res.slice(0, 8).map((r, i) => ({ type: 'line', x: r.train_sizes, y: r.test_accuracy.map((a) => a * 100), name: r.label || `${r.xor}-XOR`, slot: i, markers: true })), { type: 'hline', y: 50, label: 'random guess' }] });
   };
   drawCurve();
   if (ui.crp) plot($('#crp-curve'), { height: 260, x: { label: 'Training CRPs', type: 'log' }, y: { label: 'Accuracy (%)', domain: [40, 100] }, layers: [{ type: 'line', x: ui.crp.train_sizes, y: ui.crp.test_accuracy.map((a) => a * 100), name: 'Test', markers: true }, { type: 'line', x: ui.crp.train_sizes, y: ui.crp.train_accuracy.map((a) => a * 100), name: 'Train', slot: 1, dash: '4 3', markers: true }, { type: 'hline', y: 50, label: 'random guess' }] });
   $('#atk-form').onsubmit = async (ev) => {
     ev.preventDefault(); const f = new FormData(ev.target);
     Object.assign(ui, { stages: +f.get('stages'), xors: f.get('xors'), noise: +f.get('noise'), sizes: f.get('sizes'), test: +f.get('test'), seed: +f.get('seed') });
-    const xors = ui.xors.split(',').map((s) => parseInt(s, 10)).filter((v) => v >= 1).slice(0, 8), sizes = ui.sizes.split(',').map((s) => parseInt(s, 10)).filter((v) => v >= 2).sort((a, b) => a - b);
+    const xors = ui.xors.split(',').map((s) => parseInt(s, 10)).filter((v) => v >= (ui.model === 'ff_arbiter' ? 0 : 1)).slice(0, 8), sizes = ui.sizes.split(',').map((s) => parseInt(s, 10)).filter((v) => v >= 2).sort((a, b) => a - b);
     if (!xors.length || !sizes.length) return toast('Enter at least one XOR value and one training size', 'error');
     ev.submitter.disabled = true;
-    try { ui.res = await ctx.runTask('attack', { stages: ui.stages, xors, noise: ui.noise, train_sizes: sizes, test_size: ui.test, seed: ui.seed }); toast('Attack finished', 'success'); attackView(ctx, root); }
+    try { ui.res = await ctx.runTask('attack', { model: ui.model, stages: ui.stages, xors, noise: ui.noise, train_sizes: sizes, test_size: ui.test, seed: ui.seed }); toast('Attack finished', 'success'); attackView(ctx, root); }
     catch (err) { toast(err.message, 'error'); ev.submitter.disabled = false; }
   };
+  $$('[data-amodel]').forEach((b) => (b.onclick = () => { ui.model = b.dataset.amodel; ui.xors = { arbiter: '1,2,3,4', ff_arbiter: '0,1,2,3', interpose: '1,2,3' }[ui.model]; ui.res = null; ui.land = null; attackView(ctx, root); }));
+  $('#atk-land').onclick = async (ev) => {
+    const f = new FormData($('#atk-form')); const v = parseInt(String(f.get('xors')).split(',')[0], 10) || (ui.model === 'ff_arbiter' ? 0 : 1);
+    ev.target.disabled = true;
+    try {
+      const res = await ctx.runTask('landscape', { model: ui.model, variant: v, stagesList: [8, 16, 24, 32, 48, 64], sizes: [50, 100, 200, 500, 1000, 2000, 4000], test_size: 1000, noise: +f.get('noise'), seed: +f.get('seed') });
+      ui.land = { ...res, title: `${{ arbiter: `${v}-XOR Arbiter`, ff_arbiter: `FF Arbiter, ${v} loop(s)`, interpose: `(1,${v})-Interpose` }[ui.model]}` };
+      attackView(ctx, root);
+    } catch (err) { toast(err.message, 'error'); ev.target.disabled = false; }
+  };
+  if (ui.land) surface3d($('#atk-land3d'), { x: ui.land.sizes.map((n) => Math.log10(n)), y: ui.land.stagesList, z: ui.land.acc.map((r) => r.map((a) => a * 100)), xLabel: 'log₁₀ CRPs', yLabel: 'stages k', zLabel: 'accuracy %', zDomain: [40, 100], xFormat: (v) => `${Math.round(10 ** v)}`, tip: (i, j, v) => `<div class="tip-head">${ui.land.sizes[i]} CRPs · k = ${ui.land.stagesList[j]}</div>accuracy <b>${fmt(v, 1)}%</b>` });
   const runCrp = async (challenges, responses, n, k, frac) => {
     const test = Math.max(10, Math.floor(n * frac)), pool = n - test, sizes = [0.05, 0.1, 0.2, 0.4, 0.7, 1].map((q) => Math.max(10, Math.floor(pool * q)));
     ui.crp = await ctx.runTask('attack-crps', { challenges, responses, n, k, trainSizes: [...new Set(sizes)], testSize: test });
@@ -555,6 +577,10 @@ function keysView(ctx, root) {
       ${chartCard('k-scatter', 'Cost vs failure probability', 'Every code × repetition combination')}
       ${chartCard('k-sens', `BER sensitivity · ${sel ? `${sel.repetition > 1 ? `Rep(${sel.repetition}) + ` : ''}${esc(sel.code)}` : '—'}`, 'Key failure if the error rate drifts (select a row below)')}
     </div>
+    <section class="card"><div class="card-head"><div style="flex:1;min-width:200px"><h3>Key-failure landscape</h3><p class="card-sub">log₁₀ key failure over bit error rate × repetition factor for the outer code below (key length and min-entropy from the form)</p></div>
+        <label class="field" style="width:200px"><span class="sr-only">Outer code</span><select id="k3-code">${[...new Set(plans.map((p) => p.code))].map((c) => `<option ${c === (ui.code3d || feasible[0]?.code || 'BCH(127,64,10)') ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+        <div class="chart-tools no-print"><button class="btn small ghost" data-act="csv" data-chart="k-3d">CSV</button><button class="btn small ghost" data-act="svg" data-chart="k-3d">SVG</button><button class="btn small ghost" data-act="png" data-chart="k-3d">PNG</button></div></div>
+      <div class="chart" id="k-3d"></div></section>
     <section class="card"><div class="card-head"><h3>Configurations</h3><span class="small muted">sorted by PUF bits; click a row to inspect</span></div>
       <div class="table-wrap" style="max-height:460px"><table class="data-table"><thead><tr><th>Outer code</th><th class="num">Rep.</th><th class="num">Blocks</th><th class="num">PUF bits</th><th class="num">Helper bits</th><th class="num">Inner BER</th><th class="num">Key failure</th><th>Status</th></tr></thead><tbody>
       ${plans.slice(0, 60).map((p) => `<tr data-plan="${p.code}|${p.repetition}" style="cursor:pointer${sel === p ? ';outline:2px solid var(--accent)' : ''}"><td><b>${p.code}</b></td><td class="num">${p.repetition}</td><td class="num">${p.blocks}</td><td class="num">${p.puf_bits.toLocaleString()}</td><td class="num">${p.helper_bits.toLocaleString()}</td><td class="num">${fmtNum(p.inner_ber)}</td><td class="num">${fmtNum(p.failure)}</td><td>${statusBadge(p.feasible ? 'good' : 'poor', p.feasible ? 'Meets target' : 'Misses')}</td></tr>`).join('')}
@@ -571,6 +597,19 @@ function keysView(ctx, root) {
     const fail = ps.map((p) => { const pb = blockFailure(repetitionError(p, sel.repetition), sel.n, sel.t); return pb <= 0 ? 1e-30 : Math.max(-Math.expm1(sel.blocks * Math.log1p(-Math.min(pb, 1 - 1e-16))), 1e-30); });
     plot($('#k-sens'), { height: 300, x: { label: 'Bit error rate p' }, y: { label: 'Key failure', type: 'log', domain: [1e-30, 1] }, layers: [{ type: 'line', x: ps, y: fail, name: 'Key failure', slot: 6 }, { type: 'vline', x: ui.ber, label: 'design p' }, { type: 'hline', y: ui.target, label: 'target' }] });
   } else $('#k-sens').innerHTML = '<p class="muted">No feasible configuration — lower the BER, relax the target or improve entropy.</p>';
+  {
+    const code = ui.code3d || feasible[0]?.code || 'BCH(127,64,10)', [, n, k, t] = CODES.find((c) => c[0] === code) || CODES[12];
+    const reps = [1, 3, 5, 7, 9, 11, 13, 15], bers = idx(24).map((i) => 0.005 + i * 0.01);
+    const z = reps.map((r) => bers.map((p) => {
+      const bpb = n * r, residual = bpb * ui.h - (bpb - k); if (residual <= 0) return null;
+      const blocks = Math.ceil(ui.key / residual), pb = blockFailure(repetitionError(p, r), n, t);
+      const f = pb <= 0 ? 1e-40 : pb >= 1 ? 1 : -Math.expm1(blocks * Math.log1p(-pb));
+      return Math.max(-40, Math.log10(Math.max(f, 1e-40)));
+    }));
+    if (z.flat().some((v) => v !== null)) surface3d($('#k-3d'), { x: bers, y: reps, z, xLabel: 'BER p', yLabel: 'repetition r', zLabel: 'log₁₀ failure', zDomain: [-40, 0], scale: 'sequential', tip: (i, j, v) => `<div class="tip-head">p = ${fmt(bers[i], 3)} · r = ${reps[j]}</div>log₁₀ failure <b>${fmt(v, 2)}</b>` });
+    else $('#k-3d').innerHTML = '<p class="muted">Helper data leaks all entropy for this code at the given min-entropy.</p>';
+    $('#k3-code').onchange = (ev) => { ui.code3d = ev.target.value; keysView(ctx, root); };
+  }
   $('#k-form').onchange = (ev) => { const f = new FormData(ev.currentTarget); Object.assign(ui, { ber: Math.min(0.45, Math.max(1e-5, +f.get('ber'))), h: Math.min(1, Math.max(0.01, +f.get('h'))), key: +f.get('key'), target: +f.get('target'), sel: null }); keysView(ctx, root); };
   $$('[data-plan]').forEach((tr) => (tr.onclick = () => { ui.sel = tr.dataset.plan; keysView(ctx, root); }));
 }
@@ -644,4 +683,4 @@ export const REFS = [
   'K. K. Mondal, A. Gupta, D. Das, “PUFAnalytics: Python library for comprehensive evaluation and analysis of PUFs,” in <i>Proc. 2025 30th Asia-Pacific Conference on Communications (APCC)</i>, IEEE, Nov. 2025, pp. 1–6, doi:10.23919/apcc64555.2025.11279762.',
 ];
 
-export const VIEWS = { overview, data: dataView, metrics: metricsView, identify: identifyView, randomness: randomnessView, attack: attackView, keys: keysView, compare: compareView, report: reportView, docs: (ctx, root) => renderDocs(root, REFS) };
+export const VIEWS = { overview, data: dataView, metrics: metricsView, identify: identifyView, randomness: randomnessView, figures: figuresView, sweep: sweepView, attack: attackView, keys: keysView, compare: compareView, report: reportView, docs: (ctx, root) => renderDocs(root, REFS) };

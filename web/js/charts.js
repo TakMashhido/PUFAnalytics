@@ -70,6 +70,8 @@ function extent(layers, key, axis) {
     let vals;
     if (L.type === 'hline') vals = key === 'y' ? [L.y] : [];
     else if (L.type === 'vline') vals = key === 'x' ? [L.x] : [];
+    else if (['box', 'violin', 'strip'].includes(L.type)) vals = key === 'x' ? L.x.flatMap((x) => [x - (L.boxWidth || 0.6) / 2 - 0.25, x + (L.boxWidth || 0.6) / 2 + 0.25]) : L.data.flat();
+    else if (L.type === 'errorbar') vals = key === 'x' ? Array.from(L.x) : [...L.y, ...L.lo, ...L.hi];
     else vals = key === 'x' ? Array.from(L.x || []) : [...(L.y || []), ...(L.y0 || []), ...(L.y1 || [])];
     for (const v of vals) { if (v === null || !Number.isFinite(v) || (axis.type === 'log' && v <= 0)) continue; lo = Math.min(lo, v); hi = Math.max(hi, v); }
     if (key === 'y' && L.type === 'bar' && axis.type !== 'log') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
@@ -81,6 +83,23 @@ function extent(layers, key, axis) {
   if (key === 'y' && !axis.tight) { const pad = (hi - lo) * 0.06; if (lo !== 0) lo -= pad; hi += pad; }
   return [lo, hi];
 }
+function q7(sorted, p) { const n = sorted.length; if (!n) return NaN; const h = (n - 1) * p, lo = Math.floor(h), hi = Math.min(lo + 1, n - 1); return sorted[lo] + (h - lo) * (sorted[hi] - sorted[lo]); }
+export function boxStats(values) {
+  const v = values.filter((x) => x !== null && Number.isFinite(x)).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const q1 = q7(v, 0.25), med = q7(v, 0.5), q3 = q7(v, 0.75), iqr = q3 - q1;
+  const lo = v.find((x) => x >= q1 - 1.5 * iqr), hi = [...v].reverse().find((x) => x <= q3 + 1.5 * iqr);
+  return { q1, med, q3, lo, hi, min: v[0], max: v[v.length - 1], n: v.length, mean: v.reduce((a, b) => a + b, 0) / v.length, outliers: v.filter((x) => x < lo || x > hi), sorted: v };
+}
+function kde(sorted, grid) {
+  const n = sorted.length, m = sorted.reduce((a, b) => a + b, 0) / n;
+  const sd = Math.sqrt(sorted.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(n - 1, 1));
+  const iqr = q7(sorted, 0.75) - q7(sorted, 0.25);
+  const h = 0.9 * Math.max(Math.min(sd, iqr / 1.34) || sd || 1e-3, 1e-6) * n ** -0.2;
+  return grid.map((g) => { let s = 0; for (const x of sorted) s += Math.exp(-0.5 * ((g - x) / h) ** 2); return s / (n * h * Math.sqrt(2 * Math.PI)); });
+}
+const hash01 = (i) => { let x = Math.imul(i + 0x9e3779b9, 0x85ebca6b) >>> 0; x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35) >>> 0; return ((x ^ (x >>> 16)) >>> 0) / 4294967296; };
+
 function barWidth(x) { if (!x || x.length < 2) return 1; let m = Infinity; for (let i = 1; i < x.length; i++) m = Math.min(m, Math.abs(x[i] - x[i - 1])); return m; }
 
 /** Render an XY plot. spec: {height, x:{label,type,domain,format}, y:{...}, layers:[...], legend, ariaLabel} */
@@ -150,6 +169,39 @@ export function plot(container, spec) {
       if (L.markers) L.x.forEach((xv, i) => { const v = L.y[i]; if (v === null || !Number.isFinite(v)) return; el('circle', { cx: X(xv), cy: Y(v), r: 4, fill: L.color, stroke: surface, 'stroke-width': 2 }, plotG); });
     } else if (L.type === 'scatter') {
       L.x.forEach((xv, i) => { const v = L.y[i]; if (v === null || !Number.isFinite(v)) return; el('circle', { cx: X(xv), cy: Y(v), r: L.r || 4.5, fill: (L.colors && L.colors[i]) || L.color, 'fill-opacity': 0.9, stroke: surface, 'stroke-width': 2 }, plotG); });
+    } else if (L.type === 'box' || L.type === 'violin' || L.type === 'strip') {
+      const half = (L.boxWidth || 0.6) / 2;
+      L._stats = L.data.map((d) => boxStats(d));
+      L.x.forEach((xc, i) => {
+        const st = L._stats[i]; if (!st) return;
+        const xl = X(xc - half), xr = X(xc + half), cx = X(xc), w = xr - xl;
+        if (L.type === 'violin' && st.n > 1) {
+          const grid = Array.from({ length: 48 }, (_, k) => st.min + ((st.max - st.min) * k) / 47);
+          const dens = kde(st.sorted, grid), mx = Math.max(...dens) || 1;
+          let d = ''; grid.forEach((g, k) => { d += `${k ? 'L' : 'M'}${cx + (dens[k] / mx) * (w / 2)},${Y(g)}`; });
+          for (let k = grid.length - 1; k >= 0; k--) d += `L${cx - (dens[k] / mx) * (w / 2)},${Y(grid[k])}`;
+          el('path', { d: d + 'Z', fill: L.color, 'fill-opacity': 0.28, stroke: L.color, 'stroke-width': 1.5 }, plotG);
+          el('line', { x1: cx, x2: cx, y1: Y(st.lo), y2: Y(st.hi), stroke: L.color, 'stroke-width': 1.5 }, plotG);
+          el('rect', { x: cx - 3.5, y: Y(st.q3), width: 7, height: Math.max(Y(st.q1) - Y(st.q3), 1), rx: 3, fill: L.color }, plotG);
+          el('circle', { cx, cy: Y(st.med), r: 3.5, fill: surface, stroke: L.color, 'stroke-width': 2 }, plotG);
+        } else if (L.type === 'box') {
+          el('line', { x1: cx, x2: cx, y1: Y(st.lo), y2: Y(st.q1), stroke: L.color, 'stroke-width': 1.5 }, plotG);
+          el('line', { x1: cx, x2: cx, y1: Y(st.q3), y2: Y(st.hi), stroke: L.color, 'stroke-width': 1.5 }, plotG);
+          for (const v of [st.lo, st.hi]) el('line', { x1: cx - w / 4, x2: cx + w / 4, y1: Y(v), y2: Y(v), stroke: L.color, 'stroke-width': 1.5 }, plotG);
+          el('rect', { x: xl, y: Y(st.q3), width: w, height: Math.max(Y(st.q1) - Y(st.q3), 1), rx: 4, fill: L.color, 'fill-opacity': 0.25, stroke: L.color, 'stroke-width': 1.5 }, plotG);
+          el('line', { x1: xl, x2: xr, y1: Y(st.med), y2: Y(st.med), stroke: L.color, 'stroke-width': 2.5 }, plotG);
+          for (const o of st.outliers) el('circle', { cx: cx + (hash01(Math.round(o * 1e6)) - 0.5) * w * 0.3, cy: Y(o), r: 3, fill: 'none', stroke: L.color, 'stroke-width': 1.5 }, plotG);
+        }
+        if (L.type === 'strip' || L.points) L.data[i].forEach((v, k) => { if (Number.isFinite(v)) el('circle', { cx: cx + (hash01(k * 7919 + i) - 0.5) * w * 0.8, cy: Y(v), r: 2.6, fill: L.color, 'fill-opacity': 0.55 }, plotG); });
+      });
+      L.y = L._stats.map((st) => (st ? st.med : null));
+    } else if (L.type === 'errorbar') {
+      L.x.forEach((xv, i) => {
+        if (!Number.isFinite(L.y[i])) return; const px = X(xv);
+        el('line', { x1: px, x2: px, y1: Y(L.lo[i]), y2: Y(L.hi[i]), stroke: L.color, 'stroke-width': 1.5 }, plotG);
+        for (const v of [L.lo[i], L.hi[i]]) el('line', { x1: px - 4, x2: px + 4, y1: Y(v), y2: Y(v), stroke: L.color, 'stroke-width': 1.5 }, plotG);
+        el('circle', { cx: px, cy: Y(L.y[i]), r: 4, fill: L.color, stroke: surface, 'stroke-width': 2 }, plotG);
+      });
     } else if (L.type === 'hline') {
       const py = Y(L.y); el('line', { x1: m.l, x2: W - m.r, y1: py, y2: py, stroke: L.color || muted, 'stroke-width': 1.5, 'stroke-dasharray': L.dash || '5 4' }, svg);
       if (L.label) text(svg, W - m.r - 4, py - 5, L.label, { 'text-anchor': 'end', fill: ink, 'font-size': 11 });
@@ -169,7 +221,7 @@ export function plot(container, spec) {
     }
   }
   // hover layer
-  const hoverable = layers.filter((L) => ['bar', 'line', 'area', 'scatter'].includes(L.type) && L.x && L.x.length);
+  const hoverable = layers.filter((L) => ['bar', 'line', 'area', 'scatter', 'box', 'violin', 'strip', 'errorbar'].includes(L.type) && L.x && L.x.length);
   if (hoverable.length && spec.hover !== false) {
     const cross = el('line', { y1: m.t, y2: H - m.b, stroke: muted, 'stroke-width': 1, opacity: 0 }, svg);
     const dots = hoverable.map((L) => el('circle', { r: 5, fill: L.color, stroke: surface, 'stroke-width': 2, opacity: 0 }, svg));
@@ -182,8 +234,11 @@ export function plot(container, spec) {
         const v = L.y[best];
         if (xs === null) xs = L.x[best];
         if (v === null || !Number.isFinite(v)) { dots[k].setAttribute('opacity', 0); return; }
-        dots[k].setAttribute('cx', X(L.x[best])); dots[k].setAttribute('cy', Y(v)); dots[k].setAttribute('opacity', L.type === 'bar' ? 0 : 1);
-        rows += `<div class="tip-row"><span class="tip-key" style="background:${L.color}"></span>${L.name || spec.y.label || 'value'}<b>${spec.y.format ? fy(v) : fmtNum(v, 4)}</b></div>`;
+        dots[k].setAttribute('cx', X(L.x[best])); dots[k].setAttribute('cy', Y(v));
+        dots[k].setAttribute('opacity', ['bar', 'box', 'violin', 'strip', 'errorbar'].includes(L.type) ? 0 : 1);
+        const st = L._stats && L._stats[best];
+        rows += st ? `<div class="tip-row"><span class="tip-key" style="background:${L.color}"></span>${L.name || 'median'}<b>${fmtNum(st.med, 4)}</b></div><div class="tip-row small">Q1–Q3<b>${fmtNum(st.q1, 3)} – ${fmtNum(st.q3, 3)}</b></div><div class="tip-row small">n · mean<b>${st.n} · ${fmtNum(st.mean, 4)}</b></div>`
+          : `<div class="tip-row"><span class="tip-key" style="background:${L.color}"></span>${L.name || spec.y.label || 'value'}<b>${spec.y.format ? fy(v) : fmtNum(v, 4)}</b>${L.lo ? `</div><div class="tip-row small">interval<b>${fmtNum(L.lo[best], 3)} – ${fmtNum(L.hi[best], 3)}</b>` : ''}</div>`;
       });
       cross.setAttribute('x1', X(xs)); cross.setAttribute('x2', X(xs)); cross.setAttribute('opacity', 0.6);
       showTip(`<div class="tip-head">${spec.x.label || 'x'}: ${spec.x.tipFormat ? spec.x.tipFormat(xs) : spec.x.format ? fx(xs) : fmtNum(xs, 4)}</div>${rows}`, ev);
@@ -197,6 +252,12 @@ export function plot(container, spec) {
 }
 
 function layersToCsv(spec) {
+  const boxes = spec.layers.filter((l) => l.data);
+  if (boxes.length) {
+    const head = ['series', 'x', 'n', 'min', 'q1', 'median', 'q3', 'max', 'mean'], rows = [head.join(',')];
+    for (const l of boxes) l.x.forEach((x, i) => { const st = boxStats(l.data[i]); if (st) rows.push([(l.name || 'series').replace(/,/g, ' '), spec.x.tipFormat ? spec.x.tipFormat(x) : x, st.n, st.min, st.q1, st.med, st.q3, st.max, st.mean].join(',')); });
+    return rows.join('\n');
+  }
   const L = spec.layers.filter((l) => l.x && l.y && l.type !== 'band');
   const xs = [...new Set(L.flatMap((l) => l.x))].sort((a, b) => a - b);
   const head = [spec.x.label || 'x', ...L.map((l, i) => (l.name || `series${i + 1}`).replace(/,/g, ' '))];
@@ -205,6 +266,7 @@ function layersToCsv(spec) {
 }
 function layersToTable(spec) {
   const csv = layersToCsv(spec).split('\n').map((r) => r.split(','));
+  if (spec.layers.some((l) => l.data)) { const h = csv.shift(); return `<table class="data-table"><thead><tr>${h.map((x) => `<th>${x}</th>`).join('')}</tr></thead><tbody>${csv.map((r) => `<tr>${r.map((c, i) => `<td>${i < 2 ? c : fmtNum(+c, 4)}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
   const head = csv.shift();
   return `<table class="data-table"><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${csv.slice(0, 2000).map((r) => `<tr>${r.map((c) => `<td>${c === '' ? '' : fmtNum(+c, 5)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
@@ -310,6 +372,34 @@ export function radar(container, spec) {
   return svg;
 }
 
+// ------------------------------------------------------------------ polar
+/** Radial bar chart. spec: {values[], ref, max, label, slot, height, tip(i,v)} — e.g. bit-aliasing around the response. */
+export function polar(container, spec) {
+  register(container, () => polar(container, spec), spec);
+  container.innerHTML = '';
+  const W = Math.max(container.clientWidth || 360, 240), H = spec.height || Math.min(W, 380), cx = W / 2, cy = H / 2;
+  const R = Math.min(W, H) / 2 - 30, r0 = R * 0.3, n = spec.values.length, max = spec.max || Math.max(...spec.values);
+  const ink = cssVar('--ink-2'), muted = cssVar('--ink-3'), grid = cssVar('--grid'), surface = cssVar('--clay'), c = SERIES()[(spec.slot ?? 0) % 8];
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': spec.ariaLabel || 'polar chart', 'font-family': cssVar('--font'), 'font-size': 11 });
+  el('rect', { x: 0, y: 0, width: W, height: H, fill: surface }, svg);
+  const rad = (v) => r0 + (Math.max(0, v) / max) * (R - r0);
+  for (const f of [0.25, 0.5, 0.75, 1]) { el('circle', { cx, cy, r: rad(max * f), fill: 'none', stroke: grid }, svg); text(svg, cx + 3, cy - rad(max * f) + 11, fmtNum(max * f, 0), { fill: muted, 'font-size': 10 }); }
+  const step = (2 * Math.PI) / n, gap = n > 180 ? 0 : step * 0.15;
+  spec.values.forEach((v, i) => {
+    const a0 = i * step - Math.PI / 2 + gap / 2, a1 = (i + 1) * step - Math.PI / 2 - gap / 2, rv = rad(v);
+    const p = (a, r) => `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`;
+    const path = el('path', { d: `M${p(a0, r0)}L${p(a0, rv)}A${rv},${rv} 0 0 1 ${p(a1, rv)}L${p(a1, r0)}A${r0},${r0} 0 0 0 ${p(a0, r0)}Z`, fill: c, 'fill-opacity': 0.85 }, svg);
+    path.addEventListener('pointermove', (ev) => showTip(spec.tip ? spec.tip(i, v) : `<div class="tip-head">${i}</div><b>${fmtNum(v, 3)}</b>`, ev));
+    path.addEventListener('pointerleave', hideTip);
+  });
+  if (spec.ref !== undefined) el('circle', { cx, cy, r: rad(spec.ref), fill: 'none', stroke: cssVar('--ink-1'), 'stroke-width': 1.5, 'stroke-dasharray': '5 4' }, svg);
+  if (spec.label) text(svg, cx, cy + 4, spec.label, { 'text-anchor': 'middle', fill: ink, 'font-size': 10.5 });
+  container.appendChild(svg);
+  container._csv = () => ['index,value', ...spec.values.map((v, i) => `${i},${v}`)].join('\n');
+  container._table = null;
+  return svg;
+}
+
 // ------------------------------------------------------------------ gauge
 export function gauge(value, ideal, lo, hi, status) {
   const r = 26, c = 2 * Math.PI * r, t = Math.max(0, Math.min(1, (value - lo) / (hi - lo)));
@@ -324,7 +414,7 @@ export function gauge(value, ideal, lo, hi, status) {
 }
 
 // ---------------------------------------------------------- registry/export
-function register(container, render, spec) {
+export function register(container, render, spec) {
   container._render = render; container._spec = spec; registry.add(container);
   if (!container._ro) {
     let w = container.clientWidth;
@@ -333,6 +423,7 @@ function register(container, render, spec) {
   }
 }
 export function rerenderAll() { for (const c of registry) { if (!c.isConnected) { registry.delete(c); c._ro?.disconnect(); continue; } c._render(); } }
+export { showTip, hideTip };
 export function svgString(container) {
   const svg = container.querySelector('svg'); if (!svg) return null;
   const clone = svg.cloneNode(true); clone.setAttribute('xmlns', NS);

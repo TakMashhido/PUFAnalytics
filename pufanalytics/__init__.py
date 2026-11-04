@@ -12,7 +12,7 @@ The original string-based functions (``hamming_distance``, ``uniqueness``,
 ...) remain available unchanged for backward compatibility.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 from .metrics import (
     hamming_distance,
