@@ -21,6 +21,12 @@ CASES = [
     dict(model="sram", n_devices=15, n_bits=128, n_repeats=5, seed=9, conditions=[["nom", 1.0], ["hot", 3.0]],
          params={"noise": 0.12, "bias": 0.1}),
     dict(model="ideal", n_devices=20, n_bits=200, n_repeats=3, seed=2, conditions=None, params={"flip_prob": 0.04}),
+    dict(model="ff_arbiter", n_devices=10, n_bits=96, n_repeats=3, seed=21, conditions=[["25C", 1.0], ["85C", 2.0]],
+         params={"stages": 32, "loops": 2, "noise": 0.1}),
+    dict(model="interpose", n_devices=8, n_bits=80, n_repeats=3, seed=22, conditions=None,
+         params={"stages": 32, "x": 2, "y": 1, "noise": 0.08}),
+    dict(model="dram", n_devices=12, n_bits=128, n_repeats=3, seed=23, conditions=[["25C", 1.0], ["85C", 2.5]],
+         params={"noise": 0.15, "threshold": 0.2, "temp_shift": 0.4}),
 ]
 
 
@@ -41,6 +47,13 @@ def main():
             out["csv_hex_dataset"] = ds.to_dict()
     out["attack"] = _clean(pa.simulated_attack(stages=16, xor=1, noise=0.05, train_sizes=(50, 200, 800), test_size=500, seed=4))
     out["ecc"] = _clean(pa.plan_key_generation(0.08, 0.9, 128, 1e-6)[:10])
+    tds = pa.simulate("sram", n_devices=6, n_bits=64, n_repeats=7, seed=31, noise=0.4)
+    out["tmv"] = pa.quality.tmv_ber(tds)
+    out["length"] = pa.stats.identification_vs_length(0.06, 0.49, [8, 16, 33, 64, 128])
+    out["sweep"] = _clean(pa.sweep("arbiter", "noise", [0.02, 0.2], param2="n_devices", values2=[4, 9], seeds=2, seed=5,
+                                   n_devices=6, n_bits=48, n_repeats=3, stages=16))
+    out["attack_ff"] = _clean(pa.simulated_attack(stages=16, noise=0.05, train_sizes=(100, 400), test_size=300, seed=3,
+                                                  model="ff_arbiter", loops=1))
     path = os.path.join(os.path.dirname(__file__), "..", "web", "tests", "golden.json")
     with open(path, "w") as fh:
         json.dump(out, fh)

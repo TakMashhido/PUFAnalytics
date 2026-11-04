@@ -124,4 +124,19 @@ export function bitMinEntropy(ds, ref) {
   const p = bitAliasing(ds, ref).map((x) => x / 100);
   return Float64Array.from(p, (q) => -Math.log2(Math.max(q, 1 - q)));
 }
+import { binomSf } from './stats.js';
+/** BER after temporal majority voting over m reads (flip probability per cell vs golden response). */
+export function tmvBer(ds, votes = [1, 3, 5, 7, 9, 11, 13, 15]) {
+  const N = ds.nBits, counts = new Map(); let total = 0;
+  ds.devices.forEach((arr, d) => {
+    const R = ds.nMeas[d]; if (R < 2) return;
+    for (let i = 0; i < N; i++) {
+      let s = 0; for (let m = 0; m < R; m++) s += arr[m * N + i];
+      const g = 2 * s >= R ? 1 : 0; let f = 0; for (let m = 0; m < R; m++) if (arr[m * N + i] !== g) f++;
+      const p = Math.round((f / R) * 1e12) / 1e12; counts.set(p, (counts.get(p) || 0) + 1); total++;
+    }
+  });
+  if (!total) return { votes, ber: votes.map(() => NaN) };
+  return { votes, ber: votes.map((m) => { let s = 0; for (const [p, c] of counts) s += c * (m <= 1 ? p : binomSf(Math.floor(m / 2), m, p)); return s / total; }) };
+}
 export { reference };

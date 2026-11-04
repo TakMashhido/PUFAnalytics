@@ -300,3 +300,12 @@ def bootstrap_indices(n, n_resamples, seed=0):
         for i in range(n):
             out[b, i] = rng.randint(n)
     return out
+
+
+def identification_vs_length(p_intra, p_inter, lengths):
+    """Binomial-model identification error ``min_t max(FAR, FRR)`` for each response length."""
+    out = []
+    for n in lengths:
+        m = binomial_far_frr(int(n), max(p_intra, 1e-12), p_inter)
+        out.append(max(m["far_at_threshold"], m["frr_at_threshold"]))
+    return {"lengths": [int(n) for n in lengths], "error": out}

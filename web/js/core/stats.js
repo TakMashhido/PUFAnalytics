@@ -156,3 +156,7 @@ export function bootstrapIndices(n, B, seed = 0) {
   for (let b = 0; b < B; b++) { const r = new Int32Array(n); for (let i = 0; i < n; i++) r[i] = rng.randint(n); out.push(r); }
   return out;
 }
+
+export function identificationVsLength(pIntra, pInter, lengths) {
+  return { lengths, error: lengths.map((n) => { const m = binomialFarFrr(n, Math.max(pIntra, 1e-12), pInter); return Math.max(m.far_at_threshold, m.frr_at_threshold); }) };
+}

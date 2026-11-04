@@ -249,3 +249,34 @@ def bit_min_entropy(data, reference="first"):
     _, ref = _ref(data, reference)
     p = ref.mean(axis=0)
     return -np.log2(np.maximum(p, 1.0 - p))
+
+
+def tmv_ber(data, votes=(1, 3, 5, 7, 9, 11, 13, 15)):
+    """Bit error rate after temporal majority voting (TMV) over ``m`` read-outs.
+
+    Each cell's flip probability ``p`` is estimated against the device's
+    majority-vote golden response; with ``m`` independent votes the residual
+    error is ``P[Binomial(m, p) > m/2]``, averaged over all cells.  Returns
+    ``{"votes": [...], "ber": [...]}``.
+    """
+    from .stats import binom_sf
+
+    ds = as_dataset(data)
+    ps = []
+    for d in ds.devices:
+        if d.shape[0] < 2:
+            continue
+        g = (2 * d.sum(axis=0) >= d.shape[0]).astype(np.uint8)
+        ps.append((d != g).mean(axis=0))
+    if not ps:
+        return {"votes": list(votes), "ber": [float("nan")] * len(votes)}
+    p = np.round(np.concatenate(ps), 12)
+    vals, counts = np.unique(p, return_counts=True)
+    out = []
+    for m in votes:
+        m = int(m)
+        if m <= 1:
+            out.append(float(np.sum(vals * counts) / counts.sum()))
+        else:
+            out.append(float(sum(c * binom_sf(m // 2, m, float(v)) for v, c in zip(vals, counts)) / counts.sum()))
+    return {"votes": [int(m) for m in votes], "ber": out}

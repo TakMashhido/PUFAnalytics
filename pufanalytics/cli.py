@@ -109,7 +109,7 @@ def main(argv=None):
     p.set_defaults(func=_cmd_analyze)
 
     p = sub.add_parser("simulate", help="generate a synthetic population")
-    p.add_argument("model", choices=["arbiter", "ro", "sram", "ideal"])
+    p.add_argument("model", choices=["arbiter", "ff_arbiter", "interpose", "ro", "sram", "dram", "ideal"])
     p.add_argument("-o", "--output", required=True, help=".csv or .json")
     p.add_argument("--devices", type=int, default=20)
     p.add_argument("--bits", type=int, default=128)

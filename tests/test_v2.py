@@ -247,3 +247,53 @@ def test_cli(tmp_path, capsys):
     assert "Uniqueness" in capsys.readouterr().out
     main(["ecc", "--ber", "0.1"])
     main(["attack", "--stages", "16", "--train-sizes", "100,500", "--test-size", "200"])
+
+
+# ------------------------------------------------------------ new models
+def test_new_models_shapes_and_determinism():
+    for model, kw in (("ff_arbiter", {"loops": 2}), ("interpose", {"x": 2, "y": 1}), ("dram", {})):
+        a = pa.simulate(model, n_devices=4, n_bits=40, n_repeats=2, seed=9, **kw)
+        b = pa.simulate(model, n_devices=4, n_bits=40, n_repeats=2, seed=9, **kw)
+        assert a.to_array().shape == (4, 2, 40)
+        assert np.array_equal(a.to_array(), b.to_array())
+
+
+def test_ff_arbiter_without_loops_is_balanced_and_loops_reduce_uniqueness():
+    plain = pa.analyze(pa.simulate("ff_arbiter", n_devices=40, n_bits=256, n_repeats=2, seed=3, loops=0), bootstrap=0)
+    looped = pa.analyze(pa.simulate("ff_arbiter", n_devices=40, n_bits=256, n_repeats=2, seed=3, loops=3), bootstrap=0)
+    assert abs(plain["uniqueness"]["mean"] - 50) < 2
+    assert looped["uniqueness"]["mean"] < plain["uniqueness"]["mean"]
+
+
+def test_dram_temperature_shifts_uniformity():
+    ds = pa.simulate("dram", n_devices=10, n_bits=512, n_repeats=3, seed=4, conditions=[("25C", 1.0), ("85C", 3.0)],
+                     temp_shift=0.5)
+    arr = ds.to_array()
+    assert arr[:, 3:, :].mean() > arr[:, :3, :].mean() + 0.1
+
+
+def test_interpose_resists_linear_attack_more_than_arbiter():
+    arb = pa.simulated_attack(stages=32, xor=1, train_sizes=(2000,), test_size=1000, seed=2)
+    ip = pa.simulated_attack(stages=32, train_sizes=(2000,), test_size=1000, seed=2, model="interpose", x=1, y=2)
+    assert ip["test_accuracy"][0] < arb["test_accuracy"][0] - 0.1
+
+
+# ---------------------------------------------------------- new analyses
+def test_tmv_reduces_ber():
+    ds = pa.simulate("sram", n_devices=8, n_bits=128, n_repeats=9, seed=1, noise=0.3)
+    t = pa.quality.tmv_ber(ds)
+    assert all(a >= b for a, b in zip(t["ber"], t["ber"][1:]))
+    assert t["ber"][-1] < t["ber"][0]
+
+
+def test_identification_error_falls_with_length():
+    e = pa.stats.identification_vs_length(0.05, 0.5, [16, 64, 256])["error"]
+    assert e[0] > e[1] > e[2]
+
+
+def test_sweep_shapes_and_trend():
+    r = pa.sweep("sram", "noise", [0.05, 0.5], seeds=2, n_devices=8, n_bits=64, n_repeats=3)
+    assert r["mean"]["reliability"].shape == (1, 2)
+    assert r["mean"]["reliability"][0, 0] > r["mean"]["reliability"][0, 1]
+    r2 = pa.sweep("arbiter", "noise", [0.05], param2="n_bits", values2=[32, 64], seeds=1, n_devices=5, n_repeats=2)
+    assert r2["mean"]["uniqueness"].shape == (2, 1)

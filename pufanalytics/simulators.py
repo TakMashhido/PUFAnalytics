@@ -16,6 +16,12 @@ Models
                  measurement noise; neighbour or disjoint pairing.
 ``sram``         SRAM power-up PUF: every cell has a static mismatch
                  ``N(bias, 1)`` plus thermal noise at each power-up.
+``ff_arbiter``   Feed-forward Arbiter PUF: intermediate arbiters drive the
+                 challenge bits of later stages (non-linear, harder to model).
+``interpose``    (x, y)-Interpose PUF: the output of an x-XOR Arbiter PUF is
+                 inserted into the middle of the challenge of a y-XOR Arbiter PUF.
+``dram``         DRAM retention PUF: a cell reads 1 when it decays within the
+                 refresh pause; higher temperature accelerates decay.
 ``ideal``        Ideal random PUF with independent bit flips (reference model).
 
 Environmental corners are modelled with *conditions*: a list of
@@ -23,6 +29,8 @@ Environmental corners are modelled with *conditions*: a list of
 measurements whose noise standard deviation is multiplied by ``noise_scale``.
 Measurement 0 (first condition, first repeat) is the enrolment read-out.
 """
+
+import math
 
 import numpy as np
 
@@ -109,7 +117,75 @@ def _sim_ideal(rng, n_devices, n_bits, sched, flip_prob=0.02, **_):
     return resp, None, {}
 
 
-SIMULATORS = {"arbiter": _sim_arbiter, "ro": _sim_ro, "sram": _sim_sram, "ideal": _sim_ideal}
+def ff_loops(stages, loops):
+    """(source, destination) stage pairs of evenly spaced, non-overlapping feed-forward loops."""
+    k, n = int(stages), int(loops)
+    return [((k * (2 * j + 1)) // (2 * n + 2), (k * (2 * j + 2)) // (2 * n + 2)) for j in range(n)]
+
+
+def _sim_ff_arbiter(rng, n_devices, n_bits, sched, stages=64, loops=1, noise=0.05, **_):
+    """Stage-recursive delay model: c=0 -> D + p_i, c=1 -> -D + q_i."""
+    k = int(stages)
+    lp = ff_loops(k, loops)
+    challenges = np.array(rng.bits(n_bits * k), dtype=np.uint8).reshape(n_bits, k)
+    pq = np.array(rng.normals(n_devices * 2 * k)).reshape(n_devices, k, 2)
+    m = len(sched)
+    z = np.array(rng.normals(n_devices * m * n_bits * (len(lp) + 1))).reshape(n_devices, m, n_bits, len(lp) + 1)
+    sc = (noise * np.array([s for _, s in sched]))[None, :, None]
+    delta = np.zeros((n_devices, m, n_bits))
+    taps = {}
+    src = {a: j for j, (a, _) in enumerate(lp)}
+    dst = {b: j for j, (_, b) in enumerate(lp)}
+    for i in range(k):
+        bit = taps[dst[i]] if i in dst else np.broadcast_to(challenges[None, None, :, i], delta.shape)
+        p = pq[:, i, 0][:, None, None]
+        q = pq[:, i, 1][:, None, None]
+        delta = np.where(bit == 0, delta + p, -delta + q)
+        if i in src:
+            j = src[i]
+            taps[j] = (delta + sc * z[..., j] > 0).astype(np.uint8)
+    resp = (delta + sc * z[..., len(lp)] > 0).astype(np.uint8)
+    return resp, challenges, {"pq": pq, "loops": lp}
+
+
+def _sim_interpose(rng, n_devices, n_bits, sched, stages=64, x=1, y=1, noise=0.05, **_):
+    k, x, y = int(stages), int(x), int(y)
+    pos = k // 2
+    challenges = np.array(rng.bits(n_bits * k), dtype=np.uint8).reshape(n_bits, k)
+    w = np.array(rng.normals(n_devices * (x * (k + 1) + y * (k + 2)))).reshape(n_devices, -1)
+    wu = w[:, : x * (k + 1)].reshape(n_devices, x, k + 1)
+    wl = w[:, x * (k + 1):].reshape(n_devices, y, k + 2)
+    phi_u = arbiter_features(challenges)
+    lower = []
+    for b in (0, 1):
+        ins = np.hstack([challenges[:, :pos], np.full((n_bits, 1), b, np.uint8), challenges[:, pos:]])
+        lower.append(np.einsum("ck,dyk->dyc", arbiter_features(ins), wl))
+    clean_u = np.einsum("ck,dxk->dxc", phi_u, wu)
+    m = len(sched)
+    z = np.array(rng.normals(n_devices * m * n_bits * (x + y))).reshape(n_devices, m, n_bits, x + y)
+    sc = (noise * np.array([s for _, s in sched]))[None, :, None, None]
+    up = (clean_u.transpose(0, 2, 1)[:, None] + sc * z[..., :x] > 0).astype(np.uint8)
+    bu = np.bitwise_xor.reduce(up, axis=3)
+    cl = np.where(bu[..., None] == 0, lower[0].transpose(0, 2, 1)[:, None], lower[1].transpose(0, 2, 1)[:, None])
+    low = (cl + sc * z[..., x:] > 0).astype(np.uint8)
+    resp = np.bitwise_xor.reduce(low, axis=3)
+    return resp, challenges, {}
+
+
+def _sim_dram(rng, n_devices, n_bits, sched, noise=0.1, threshold=0.0, temp_shift=0.3, **_):
+    """Bit = 1 if the cell decays: cell + noise*z < threshold + temp_shift * ln(scale)."""
+    cell = np.array(rng.normals(n_devices * n_bits)).reshape(n_devices, n_bits)
+    m = len(sched)
+    z = np.array(rng.normals(n_devices * m * n_bits)).reshape(n_devices, m, n_bits)
+    scales = np.array([s for _, s in sched])
+    sc = (noise * scales)[None, :, None]
+    rhs = np.array([threshold + temp_shift * math.log(max(s, 1e-12)) for s in scales])[None, :, None]
+    resp = (cell[:, None, :] + sc * z < rhs).astype(np.uint8)
+    return resp, None, {}
+
+
+SIMULATORS = {"arbiter": _sim_arbiter, "ro": _sim_ro, "sram": _sim_sram, "ideal": _sim_ideal,
+              "ff_arbiter": _sim_ff_arbiter, "interpose": _sim_interpose, "dram": _sim_dram}
 
 
 def simulate(model="arbiter", n_devices=20, n_bits=128, n_repeats=5, seed=1, conditions=None,
@@ -118,7 +194,7 @@ def simulate(model="arbiter", n_devices=20, n_bits=128, n_repeats=5, seed=1, con
 
     Parameters
     ----------
-    model : {"arbiter", "ro", "sram", "ideal"}
+    model : {"arbiter", "ff_arbiter", "interpose", "ro", "sram", "dram", "ideal"}
     n_devices : int
         Number of PUF instances (chips).
     n_bits : int
@@ -135,6 +211,9 @@ def simulate(model="arbiter", n_devices=20, n_bits=128, n_repeats=5, seed=1, con
         * ro: ``sigma_process`` (1.0), ``noise`` (0.1), ``gradient`` (0.0),
           ``pairing`` ("neighbor" | "disjoint")
         * sram: ``noise`` (0.1), ``bias`` (0.0)
+        * ff_arbiter: ``stages`` (64), ``loops`` (1), ``noise`` (0.05)
+        * interpose: ``stages`` (64), ``x`` (1), ``y`` (1), ``noise`` (0.05)
+        * dram: ``noise`` (0.1), ``threshold`` (0.0), ``temp_shift`` (0.3)
         * ideal: ``flip_prob`` (0.02)
 
     Returns

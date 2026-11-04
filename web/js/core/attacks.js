@@ -1,6 +1,6 @@
 // Logistic-regression modelling attack — mirrors pufanalytics/attacks.py.
 import { PortableRNG } from './rng.js';
-import { arbiterFeatures } from './simulators.js';
+import { arbiterFeatures, simulate } from './simulators.js';
 
 const sigmoid = (z) => 0.5 * (1 + Math.tanh(0.5 * z));
 
@@ -55,7 +55,13 @@ export function modelingAttack(challenges, responses, n, k, trainSizes, testSize
   const phi = arbiterFeatures(challenges, n, k);
   return curve(phi, Float64Array.from(responses), n, k + 1, trainSizes, testSize, l2, onProgress);
 }
-export function simulatedAttack({ stages = 64, xor = 1, noise = 0.05, train_sizes = [50, 100, 200, 500, 1000, 2000, 5000], test_size = 2000, seed = 7, l2 = 1e-2 } = {}, onProgress) {
+export function simulatedAttack({ stages = 64, xor = 1, noise = 0.05, train_sizes = [50, 100, 200, 500, 1000, 2000, 5000], test_size = 2000, seed = 7, l2 = 1e-2, model = 'arbiter', params = {} } = {}, onProgress) {
+  if (model !== 'arbiter') {
+    const n = Math.max(...train_sizes) + (test_size | 0);
+    const ds = simulate({ model, n_devices: 1, n_bits: n, n_repeats: 1, seed, params: { stages, noise, ...params } });
+    const res = modelingAttack(ds.challenges, ds.devices[0].subarray(0, n), n, ds.stages, train_sizes, test_size, l2, onProgress);
+    return { ...res, model, stages: stages | 0, noise, seed, params };
+  }
   const rng = new PortableRNG(seed), k = stages | 0, X = xor | 0;
   const n = Math.max(...train_sizes) + (test_size | 0);
   const w = rng.normals(X * (k + 1));

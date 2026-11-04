@@ -8,6 +8,9 @@ import { simulate } from '../js/core/simulators.js';
 import { toDict, parseText } from '../js/core/dataset.js';
 import { analyze } from '../js/core/analyze.js';
 import { simulatedAttack } from '../js/core/attacks.js';
+import { sweep } from '../js/core/sweep.js';
+import { tmvBer } from '../js/core/quality.js';
+import { identificationVsLength } from '../js/core/stats.js';
 import { planKeyGeneration } from '../js/core/ecc.js';
 import * as NIST from '../js/core/nist.js';
 import { igamc, binomCdf, binomSf } from '../js/core/stats.js';
@@ -90,6 +93,15 @@ const A = simulatedAttack({ stages: 16, xor: 1, noise: 0.05, train_sizes: [50, 2
 closeArr(A.train_sizes, G.attack.train_sizes, 0, 'attack sizes'); closeArr(A.test_accuracy, G.attack.test_accuracy, 0.01, 'attack test accuracy');
 const P = planKeyGeneration(0.08, 0.9, 128, 1e-6).slice(0, 10);
 P.forEach((p, i) => { ok(p.code === G.ecc[i].code && p.repetition === G.ecc[i].repetition, `ecc row ${i} config`); close(p.failure, G.ecc[i].failure, 1e-7, `ecc row ${i} failure`); });
+
+// Temporal majority voting, length curve, sweeps, attacks on new models
+const T = tmvBer(simulate({ model: 'sram', n_devices: 6, n_bits: 64, n_repeats: 7, seed: 31, params: { noise: 0.4 } }));
+closeArr(T.ber, G.tmv.ber, 1e-10, 'TMV BER');
+closeArr(identificationVsLength(0.06, 0.49, [8, 16, 33, 64, 128]).error, G.length.error, 1e-7, 'identification vs length');
+const SW = sweep({ model: 'arbiter', param: 'noise', values: [0.02, 0.2], param2: 'n_devices', values2: [4, 9], seeds: 2, seed: 5, n_devices: 6, n_bits: 48, n_repeats: 3, params: { stages: 16 } });
+for (const k of Object.keys(G.sweep.mean)) { closeArr(SW.mean[k].flat(), G.sweep.mean[k].flat(), 1e-9, `sweep mean ${k}`); closeArr(SW.std[k].flat(), G.sweep.std[k].flat(), 1e-9, `sweep std ${k}`); }
+const AF = simulatedAttack({ stages: 16, noise: 0.05, train_sizes: [100, 400], test_size: 300, seed: 3, model: 'ff_arbiter', params: { loops: 1 } });
+closeArr(AF.test_accuracy, G.attack_ff.test_accuracy, 0.01, 'ff-arbiter attack accuracy');
 
 console.log(`${checks - failures}/${checks} parity checks passed`);
 if (failures) process.exit(1);
