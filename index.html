@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PUFAnalytics: online PUF evaluation workbench</title>
+  <meta name="description" content="Evaluate physically unclonable functions in your browser: uniqueness, reliability, NIST SP 800-22, entropy, FAR/FRR, ML attacks and fuzzy-extractor sizing.">
+  <meta name="author" content="Koustav Kumar Mondal">
+  <meta name="theme-color" content="#6c5ce7">
+  <link rel="canonical" href="https://koustav.isroot.in/PUFAnalytics/">
+  <meta property="og:site_name" content="PUFAnalytics">
+  <meta property="og:title" content="PUFAnalytics: online PUF evaluation workbench">
+  <meta property="og:description" content="Evaluate physically unclonable functions in your browser: uniqueness, reliability, NIST SP 800-22, entropy, FAR/FRR, ML attacks and fuzzy-extractor sizing.">
+  <meta property="og:url" content="https://koustav.isroot.in/PUFAnalytics/">
+  <meta property="og:image" content="https://koustav.isroot.in/og/apps/pufanalytics.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:type" content="website">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "PUFAnalytics", "alternateName": "PUFAnalytics web workbench", "url": "https://koustav.isroot.in/PUFAnalytics/", "description": "Evaluate physically unclonable functions in your browser: uniqueness, reliability, NIST SP 800-22, entropy, FAR/FRR, ML attacks and fuzzy-extractor sizing.", "applicationCategory": "EducationalApplication", "applicationSubCategory": "Hardware security research", "operatingSystem": "Any (runs in a web browser)", "browserRequirements": "Requires JavaScript", "softwareVersion": "2.1.0", "license": "https://opensource.org/licenses/MIT", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "isAccessibleForFree": true, "image": "https://koustav.isroot.in/og/apps/pufanalytics.jpg", "author": {"@type": "Person", "@id": "https://koustav.isroot.in/#person", "name": "Koustav Kumar Mondal", "url": "https://koustav.isroot.in/"}, "sameAs": ["https://github.com/TakMashhido/PUFAnalytics"], "citation": "https://doi.org/10.23919/apcc64555.2025.11279762", "subjectOf": {"@type": "BlogPosting", "url": "https://koustav.isroot.in/blog/pufanalytics-guide/"}}</script>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Nunito:wght@500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="css/clay.css">
+  <script>
+    try { const t = localStorage.getItem('pufa.theme'); if (t) document.documentElement.dataset.theme = JSON.parse(t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Primary">
+      <a class="brand" href="#/overview" aria-label="PUFAnalytics home">
+        <span class="brand-logo"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><rect x="7" y="7" width="18" height="18" rx="4" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M11 3v4M16 3v4M21 3v4M11 25v4M16 25v4M21 25v4M3 11h4M3 16h4M3 21h4M25 11h4M25 16h4M25 21h4" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M12 19l3-6 2 4 3-5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span><span class="brand-name">PUFAnalytics</span><br><span class="brand-sub">PUF evaluation workbench</span></span>
+      </a>
+      <nav class="nav" id="nav"></nav>
+      <div class="side-card" id="side-dataset"></div>
+      <div class="side-card small">
+        <b>Private by design.</b> All computation runs locally in your browser. Nothing is uploaded.
+      </div>
+    </aside>
+    <div class="overlay" id="overlay"></div>
+    <div class="main" id="main" tabindex="-1">
+      <header class="topbar">
+        <button class="btn icon ghost menu-btn" id="menu-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false"></button>
+        <h1 id="view-title">Overview</h1>
+        <label class="sr-only" for="ds-select">Active dataset</label>
+        <select id="ds-select" class="hide-sm" style="max-width:260px;width:auto"></select>
+        <button class="btn icon" id="theme-btn" aria-label="Toggle colour theme"></button>
+        <a class="btn icon hide-sm" href="https://github.com/TakMashhido/PUFAnalytics" target="_blank" rel="noopener" aria-label="Source code on GitHub" id="gh-link"></a>
+        <div class="progress" id="progress" aria-hidden="true"><span></span></div>
+      </header>
+      <main id="view" class="view" aria-live="polite"></main>
+      <footer class="footer">
+        PUFAnalytics v2.1.0 · © 2024–2026 Koustav Kumar Mondal · MIT License ·
+        <a href="https://doi.org/10.23919/apcc64555.2025.11279762" target="_blank" rel="noopener">DOI 10.23919/apcc64555.2025.11279762</a>
+      </footer>
+    </div>
+  </div>
+  <noscript><div class="card" style="margin:20px">PUFAnalytics needs JavaScript enabled.</div></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

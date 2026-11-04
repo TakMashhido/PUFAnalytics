@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PUFAnalytics</title>
+<script>
+  // Single-page app: send unknown paths back to the app shell, preserving the view as a hash route.
+  var base = location.pathname.split('/').slice(0, 2).join('/') + '/';
+  location.replace(base + '#/overview');
+</script>
+<style>body{font-family:system-ui,sans-serif;background:#e8ebf5;color:#1d2033;display:grid;place-items:center;min-height:100vh;margin:0}</style>
+</head><body><p>Redirecting to <a href="./">PUFAnalytics</a>…</p></body></html>
