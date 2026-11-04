@@ -21,6 +21,7 @@
 - `uniqueness()` returned twice the mean fractional inter-device Hamming distance; it now matches the standard definition (ideal 0.5).
 - Corrected docstrings of `inter_puf_variation`, `avalanche_effect` and `correlation_coefficient`.
 - Corrected the author name order in `CITATION.cff`.
+- Citation and DOI now point to the IEEE APCC 2025 paper (doi:10.23919/apcc64555.2025.11279762) in the README, `CITATION.cff` and the web app.
 
 ### Changed
 - Packaging moved from `setup.py` to `pyproject.toml`; NumPy is now a dependency (Python ≥ 3.8).

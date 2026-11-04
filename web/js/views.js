@@ -646,7 +646,7 @@ export const REFS = [
   'R. Maes, <i>Physically Unclonable Functions: Constructions, Properties and Applications</i>, Springer, 2013.',
   'A. Rukhin et al., “A statistical test suite for random and pseudorandom number generators for cryptographic applications,” NIST SP 800-22 Rev. 1a, 2010.',
   'M. S. Turan et al., “Recommendation for the entropy sources used for random bit generation,” NIST SP 800-90B, 2018.',
-  'K. K. Mondal, “PUFAnalytics: a research-grade toolkit for the evaluation of physically unclonable functions,” Zenodo, doi:10.5281/zenodo.13284761.',
+  'K. K. Mondal, A. Gupta, D. Das, “PUFAnalytics: Python library for comprehensive evaluation and analysis of PUFs,” in <i>Proc. 2025 30th Asia-Pacific Conference on Communications (APCC)</i>, IEEE, Nov. 2025, pp. 1–6, doi:10.23919/apcc64555.2025.11279762.',
   'U. Rührmair et al., “Modeling attacks on physical unclonable functions,” in <i>Proc. ACM CCS</i>, 2010, pp. 237–249.',
   'C. Bösch et al., “Efficient helper data key extractor on FPGAs,” in <i>CHES</i>, LNCS 5154, 2008, pp. 181–197.',
   'Y. Dodis, L. Reyzin, A. Smith, “Fuzzy extractors: how to generate strong keys from biometrics and other noisy data,” in <i>EUROCRYPT</i>, 2004.',

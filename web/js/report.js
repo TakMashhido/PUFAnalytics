@@ -2,14 +2,16 @@
 import { fmt } from './ui.js';
 
 export const VERSION = '2.0.0';
-export const BIBTEX = `@software{mondal_pufanalytics,
-  author    = {Mondal, Koustav Kumar},
-  title     = {{PUFAnalytics}: A Research-Grade Toolkit for the Evaluation of Physically Unclonable Functions},
-  year      = {2024},
-  version   = {${VERSION}},
-  publisher = {Zenodo},
-  doi       = {10.5281/zenodo.13284761},
-  url       = {https://github.com/TakMashhido/PUFAnalytics}
+export const BIBTEX = `@inproceedings{mondal2025pufanalytics,
+  title = {PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs},
+  url = {http://dx.doi.org/10.23919/apcc64555.2025.11279762},
+  DOI = {10.23919/apcc64555.2025.11279762},
+  booktitle = {2025 30th Asia-Pacific Conference on Communications (APCC)},
+  publisher = {IEEE},
+  author = {Mondal, Koustav Kumar and Gupta, Ashi and Das, Debasis},
+  year = {2025},
+  month = Nov,
+  pages = {1–6}
 }`;
 
 const clamp = (v) => Math.max(0, Math.min(1, v));

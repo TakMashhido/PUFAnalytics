@@ -27,6 +27,7 @@ test = ["pytest>=7", "scipy>=1.7"]
 [project.urls]
 Homepage = "https://koustav.isroot.in/PUFAnalytics/"
 Source = "https://github.com/TakMashhido/PUFAnalytics"
+Paper = "https://doi.org/10.23919/apcc64555.2025.11279762"
 
 [project.scripts]
 pufanalytics = "pufanalytics.cli:main"

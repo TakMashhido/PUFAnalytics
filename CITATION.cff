@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software, please cite the paper below (preferred-citation)."
 type: software
 title: "PUFAnalytics: A Research-Grade Toolkit for the Evaluation of Physically Unclonable Functions"
 abstract: >-
@@ -14,7 +14,7 @@ authors:
     given-names: "Koustav Kumar"
     orcid: "https://orcid.org/0000-0003-1679-1030"
 version: 2.0.0
-doi: 10.5281/zenodo.13284761
+doi: 10.23919/apcc64555.2025.11279762
 date-released: 2026-11-03
 url: "https://koustav.isroot.in/PUFAnalytics/"
 repository-code: "https://github.com/TakMashhido/PUFAnalytics"
@@ -28,3 +28,23 @@ keywords:
   - NIST SP 800-22
   - entropy
   - fuzzy extractor
+preferred-citation:
+  type: conference-paper
+  title: "PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs"
+  authors:
+    - family-names: "Mondal"
+      given-names: "Koustav Kumar"
+      orcid: "https://orcid.org/0000-0003-1679-1030"
+    - family-names: "Gupta"
+      given-names: "Ashi"
+    - family-names: "Das"
+      given-names: "Debasis"
+  collection-title: "2025 30th Asia-Pacific Conference on Communications (APCC)"
+  publisher:
+    name: "IEEE"
+  year: 2025
+  month: 11
+  start: 1
+  end: 6
+  doi: "10.23919/apcc64555.2025.11279762"
+  url: "https://doi.org/10.23919/apcc64555.2025.11279762"

@@ -3,7 +3,7 @@
 **A research-grade toolkit for evaluating Physically Unclonable Functions (PUFs).** It comes as a Python package and as an in-browser workbench, and the two give the same results.
 
 [![CI](https://github.com/TakMashhido/PUFAnalytics/actions/workflows/ci.yml/badge.svg)](https://github.com/TakMashhido/PUFAnalytics/actions/workflows/ci.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13284761.svg)](https://doi.org/10.5281/zenodo.13284761)
+[![DOI](https://img.shields.io/badge/DOI-10.23919/apcc64555.2025.11279762-blue.svg)](https://doi.org/10.23919/apcc64555.2025.11279762)
 [![License: MIT](https://img.shields.io/badge/License-MIT-6c5ce7.svg)](LICENSE)
 
 **▶ Web app: [koustav.isroot.in/PUFAnalytics](https://koustav.isroot.in/PUFAnalytics/)**. It runs entirely in your browser, works offline, and never uploads your data.
@@ -183,17 +183,21 @@ tests/               pytest suite
 
 ## Citation
 
-If PUFAnalytics supports your research, please cite it:
+If PUFAnalytics supports your research, please cite the paper (IEEE APCC 2025):
+
+> K. K. Mondal, A. Gupta and D. Das, "PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs," *2025 30th Asia-Pacific Conference on Communications (APCC)*, IEEE, 2025, pp. 1–6, doi: [10.23919/apcc64555.2025.11279762](https://doi.org/10.23919/apcc64555.2025.11279762).
 
 ```bibtex
-@software{mondal_pufanalytics,
-  author    = {Mondal, Koustav Kumar},
-  title     = {{PUFAnalytics}: A Research-Grade Toolkit for the Evaluation of Physically Unclonable Functions},
-  year      = {2024},
-  version   = {2.0.0},
-  publisher = {Zenodo},
-  doi       = {10.5281/zenodo.13284761},
-  url       = {https://github.com/TakMashhido/PUFAnalytics}
+@inproceedings{mondal2025pufanalytics,
+  title = {PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs},
+  url = {http://dx.doi.org/10.23919/apcc64555.2025.11279762},
+  DOI = {10.23919/apcc64555.2025.11279762},
+  booktitle = {2025 30th Asia-Pacific Conference on Communications (APCC)},
+  publisher = {IEEE},
+  author = {Mondal, Koustav Kumar and Gupta, Ashi and Das, Debasis},
+  year = {2025},
+  month = Nov,
+  pages = {1–6}
 }
 ```
 
@@ -207,6 +211,7 @@ If PUFAnalytics supports your research, please cite it:
 6. C. Bösch et al., "Efficient helper data key extractor on FPGAs," CHES, 2008.
 7. Y. Dodis, L. Reyzin, A. Smith, "Fuzzy extractors," EUROCRYPT, 2004.
 8. J. Daugman, "The importance of being random: statistical principles of iris recognition," *Pattern Recognition*, 2003.
+9. K. K. Mondal, A. Gupta, D. Das, "PUFAnalytics: Python Library for Comprehensive Evaluation and Analysis of PUFs," *2025 30th Asia-Pacific Conference on Communications (APCC)*, IEEE, 2025, pp. 1–6, doi: [10.23919/apcc64555.2025.11279762](https://doi.org/10.23919/apcc64555.2025.11279762).
 
 ## License
 
